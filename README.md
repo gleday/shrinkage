@@ -1,2 +1,2 @@
 # shrinkage
-Bayesian regression using shrinkage priors
+An R package implementing various Bayesian regression models.
