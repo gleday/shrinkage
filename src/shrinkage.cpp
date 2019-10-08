@@ -1,4 +1,3 @@
-
 //[[Rcpp::depends(RcppArmadillo)]]
 #include <R.h>
 #include <RcppArmadillo.h>
@@ -20,12 +19,13 @@ double rgig(double lambda, double chi, double psi) {
  return as<double>(fun(wrap(1), wrap(lambda), wrap(chi), wrap(psi)));
 }
 
-//----------- External functions -----------//
+////////////////////////////////////////////////////
+//-------------- External functions --------------//
+////////////////////////////////////////////////////
 
-// Bayesian ridge regression
-// Future extension for bridge():
-// - consider empirical Bayes estimation of \tau^2.
-// ( -> add argument prior = c("bp", "ig", "eb")?)
+// Future extension for Bayesian ridge:
+// - implement empirical Bayes ML-based estimation of \tau^2.
+// ( -> add argument prior = c("bp", "ig", "ml")?)
 
 // [[Rcpp::export(.bridge)]]
 Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a = 0.5, const double b = 0.5, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true){

@@ -6,7 +6,10 @@ Date: 2019-08-22
 Author: Gwenael G.R. Leday [cre, aut]
 Authors@R: c(person("Gwenael G.R.","Leday", role=c("cre", "aut"), email="gwenael.leday@mrc-bsu.cam.ac.uk"))
 Maintainer: Gwenael G.R. Leday <gwenael.leday@mrc-bsu.cam.ac.uk>
+Depends: R (>= 3.1.0)
 Description: This packages implements several Bayesian regression models.
 License: GPL-3
-Imports: Rcpp (>= 1.0.1), RcppArmadillo, GIGrvg
+Imports: Rcpp (>= 1.0.1), RcppArmadillo, GIGrvg, assertthat
 LinkingTo: Rcpp, RcppArmadillo, GIGrvg
+RoxygenNote: 6.1.1
+Encoding: UTF-8

@@ -1,10 +1,10 @@
-\name{bro-package}
-\alias{bro-package}
-\alias{bro}
+\name{shrinkage-package}
+\alias{shrinkage-package}
+\alias{shrinkage}
 \docType{package}
 
 \title{
-  Bayesian regression
+  Bayesian regression using shrinkage priors
 }
 
 \description{

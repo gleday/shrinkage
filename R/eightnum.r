@@ -1,3 +1,28 @@
+#' eight-number summary
+#'
+#' @param x vector of samples
+#'
+#' @description 
+#' This function computes an eight-number summary for a sample
+#'
+#' @details
+#' This function returns the mean, sd, min, median, max, quantiles and mode of the sample.
+#'
+#' @return A numeric vector
+#'
+#' @author Gwenael G.R. Leday
+#'
+#' @references
+#' Leday, G.G.R. et al. (2019)
+#'
+#' @examples 
+#' \dontrun{
+#' set.seed(12345)
+#' xx <- rnorm(10000)
+#' eightnum(xx)
+#' }
+#' 
+#' @export
 eightnum <- function(x){
   x <- x[!is.na(x)]
   x <- x[is.finite(x)]
