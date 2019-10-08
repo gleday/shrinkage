@@ -81,7 +81,7 @@ bgr <- function(y, X, g, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 
   assert_that(length(prior)==1)
   assert_that(noNA(prior))
   assert_that(prior%in%c("bp", "g"), msg="'prior' is not recognized")
-  idx <- which(prior==c("bp", "g"))
+  idx <- which(prior==c("g", "bp"))
   
   # Check input argument a
   assert_that(is.vector(a))
@@ -146,7 +146,6 @@ bgr <- function(y, X, g, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 
   # Output
   if(light){
     res <- list("summary" = mat)
-    
   }else{
     res <- c(list("summary" = mat), res)
   }

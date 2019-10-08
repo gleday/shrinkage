@@ -156,7 +156,7 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 
 
 // [[Rcpp::export(.bgridge)]]
-Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a = 0.5, const double b = 0.5, const double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, bool light = true){
+Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior, const double a = 0.5, const double b = 0.5, const double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, bool light = true){
   
   // Dimension data
   const int n = X.n_rows;
@@ -175,6 +175,7 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
   const double ustar = a - 0.5*p;
   double tauminus2 = 1;
   double sigmaminus2 = 1;
+  double gamma2 = 1;
   const int nruns = mcmc + burnin;
   arma::colvec wk = ones(K)*1/K;
   arma::colvec d = zeros(p);
@@ -212,19 +213,40 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       cholvar = arma::chol(betavar);
       beta = trans(beta.t() * cholvar);
       beta += betamean;
-      
-      // Sample from P(\tau^2 | ...)
       btDb = sum(d % square(beta));
-      tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
-      
-      // Sample from P(\omega_k | ...)
-      for(int u = 0; u < K; u++){
-        indk = find(g == gr(u));
-        bktDbk = sum(square(beta(indk)));
-        wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*b);
-      }
-      wk /= sum(wk);
 
+      switch(prior){
+      case 1:
+        
+        // Sample from P(\tau^2 | ...)
+        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
+        
+        // Sample from P(\omega_k | ...)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktDbk = sum(square(beta(indk)));
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*b);
+        }
+        wk /= sum(wk);
+        
+      case 2:
+        
+        // Sample from P(\tau^2 | ...)
+        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*gamma2);
+        
+        // Sample from P(\gamma^2 | ...)
+        gamma2 = R::rgamma(a+b, 1/(1/tauminus2 + 1));
+        
+        // Sample from P(\omega_k | ...)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktDbk = sum(square(beta(indk)));
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*gamma2);
+        }
+        wk /= sum(wk);
+        
+      }
+      
       // Sample from P(\sigma^2| ...)
       for(int u = 0; u < K; u++){
         d(find(g == gr(u))).fill(pk(u)/wk(u));

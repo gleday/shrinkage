@@ -135,7 +135,6 @@ br <- function(y, X, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 1000
   # Output
   if(light){
     res <- list("summary" = mat)
-    
   }else{
     res <- c(list("summary" = mat), res)
   }
