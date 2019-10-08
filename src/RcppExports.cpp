@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // bridge
 Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a, const double b, const int mcmc, const int burnin, const int thin, bool verbose);
-RcppExport SEXP _bro_bridge(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP) {
+RcppExport SEXP _shrinkage_bridge(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,11 +27,11 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bro_bridge", (DL_FUNC) &_bro_bridge, 9},
+    {"_shrinkage_bridge", (DL_FUNC) &_shrinkage_bridge, 9},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_bro(DllInfo *dll) {
+RcppExport void R_init_shrinkage(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

@@ -3,10 +3,10 @@ bridge <- function(y, X, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 
   if(length(prior)!=1){
     stop("argument 'prior' must have length 1")
   }
-  if(!prior%in%c("bp", "ig", "eb")){
+  if(!prior%in%c("bp", "ig", "ml", "cpo")){
     stop("unknown 'prior'!")
   }
-  idx <- which(prior==c("bp", "ig", "eb"))
+  idx <- which(prior==c("bp", "ig", "ml", "cpo"))
   
   # Gibbs
   res <- .bridge(y, X, idx, a, b, mcmc, burnin, thin, verbose)
