@@ -4,7 +4,7 @@
 \alias{bgr}
 \title{Bayesian group ridge regression}
 \usage{
-bgr(y, X, g, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L,
+bgr(y, X, g, prior = "g", a = 0.5, b = 0.5, c = 1, mcmc = 5000L,
   burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE)
 }
 \arguments{
@@ -19,6 +19,8 @@ bgr(y, X, g, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L,
 \item{a}{hyperparameter.}
 
 \item{b}{hyperparameter.}
+
+\item{c}{hyperparameter.}
 
 \item{mcmc}{integer. Number of desired samples.}
 
