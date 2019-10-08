@@ -25,9 +25,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// bgridge
+Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a, const double b, const double c, const int mcmc, const int burnin, const int thin, bool verbose, bool light);
+RcppExport SEXP _shrinkage_bgridge(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP lightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type g(gSEXP);
+    Rcpp::traits::input_parameter< const double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const double >::type c(cSEXP);
+    Rcpp::traits::input_parameter< const int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
+    Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type light(lightSEXP);
+    rcpp_result_gen = Rcpp::wrap(bgridge(y, X, g, a, b, c, mcmc, burnin, thin, verbose, light));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_shrinkage_bridge", (DL_FUNC) &_shrinkage_bridge, 9},
+    {"_shrinkage_bgridge", (DL_FUNC) &_shrinkage_bgridge, 11},
     {NULL, NULL, 0}
 };
 

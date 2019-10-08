@@ -1,8 +1,9 @@
-#' Bayesian ridge regression
+#' Bayesian group ridge regression
 #'
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
-#' @param prior character. Either "bp", "ig", "ml" or "cpo". See Details.
+#' @param g vector of length p for group memberships.
+#' @param prior character. Either "bp" or "g". See Details.
 #' @param a hyperparameter.
 #' @param b hyperparameter.
 #' @param mcmc integer. Number of desired samples.
@@ -12,7 +13,8 @@
 #' @param light logical. If TRUE, only return a summary of the samples. 
 #'
 #' @description 
-#' This function implements a fast Gibbs algorithm for the Bayesian ridge regression model.
+#' This function implements a Gibbs algorithm for the ridge regression model with
+#' grouped variables (predictors).
 #'
 #' @details
 #' blablabla
@@ -46,15 +48,16 @@
 #' }
 #' 
 #' @export
-br <- function(y, X, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
+bgr <- function(y, X, g, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
   ###########################################
   
   # Check input argument y
-  assert_that(is.vector(X))
+  assert_that(is.numeric(y))
   assert_that(not_empty(y))
+  assert_that(is.vector(y))
   assert_that(noNA(y))
   assert_that(all(is.finite(y)))
   
@@ -64,13 +67,21 @@ br <- function(y, X, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 1000
   assert_that(noNA(X))
   assert_that(all(is.finite(X)))
   
+  # Check input argument g
+  assert_that(is.numeric(g))
+  assert_that(not_empty(y))
+  assert_that(is.vector(g))
+  assert_that(noNA(g))
+  assert_that(all(is.finite(g)))
+  K <- length(unique(g))
+
   # Check input argument prior
   assert_that(is.character(prior))
   assert_that(not_empty(prior))
   assert_that(length(prior)==1)
   assert_that(noNA(prior))
-  assert_that(prior%in%c("bp", "ig", "ml", "cpo"), msg="'prior' is not recognized")
-  idx <- which(prior==c("bp", "ig", "ml", "cpo"))
+  assert_that(prior%in%c("bp", "g"), msg="'prior' is not recognized")
+  idx <- which(prior==c("bp", "g"))
   
   # Check input argument a
   assert_that(is.vector(a))
@@ -122,12 +133,12 @@ br <- function(y, X, prior = "bp", a = 0.5, b = 0.5, mcmc = 5000L, burnin = 1000
   ###########################################
   
   # Gibbs
-  res <- .bridge(y, X, idx, a, b, mcmc, burnin, thin, verbose)
+  res <- .bgridge(y, X, g, idx, a, b, mcmc, burnin, thin, verbose)
   
   # Summarize samples
   mat <- summarize(res)
   if(is.null(colnames(X))){
-    rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", "sigma2")
+    rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", paste0("w", K), "sigma2")
   }else{
     rownames(mat) <- c(colnames(X), "tau2", "sigma2")
   }
