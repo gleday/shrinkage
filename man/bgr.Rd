@@ -45,16 +45,19 @@ blablabla
 \examples{
 \dontrun{
 # Generate data
-set.seed(2019)
-n <- 20
-p <- 20
-X <- matrix(rnorm(n*p), n, p)
-trueBeta <- rep(0, p)
-trueBeta[1:10] <- 1
-y <- X\%*\%trueBeta + rnorm(n, sd=0.5)
+library(mvtnorm)
+set.seed(20190719)
+n <- 200
+p <- 100
+V <- toeplitz(c(0, 1, rep(0, p-2)))*0.25 + diag(p) # AR1(0.25)
+X <- rmvnorm(n, mean = rep(0,p), sigma = V)
+trueBeta <- c(1, -1, 0.9, -0.9, 0.8, -0.8, 0.7, -0.7, 0.6, -0.6, rep(0, 90))
+XB <- X\%*\%trueBeta
+y <- as.vector(XB + rnorm(nrow(X), mean=0, sd=sqrt(.1)))
+g <- rep(c(1, 2), 50)
 
 # Run gibbs sampler
-res <- br(y, X, prior="bp", a=0.5, b=0.5, mcmc=1000, burnin=1000, thin=10, verbose=TRUE)
+res <- bgr(y, X, g=g, prior="bp", a=0.5, b=0.5, c=1, mcmc=1000, burnin=1000, thin=10, verbose=TRUE)
 
 # Extract summary
 res$summary
