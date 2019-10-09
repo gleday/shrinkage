@@ -1,7 +1,7 @@
 # shrinkage
-An R package implementing various Bayesian regression models, including:
-* ridge regression (br)
-* group ridge regression (bgr)
+An R package implementing various regression models with shrinkage priors, including:
+* ridge (br)
+* group ridge (bgr)
 
 To do's:
 * horseshoe prior (hs)
@@ -9,4 +9,17 @@ To do's:
 * normal-Beta-Prime (nbp)
 * Dirichlet-Laplace prior (dl)
 
+## Installation
+
+To install **shrinkage** from R:
+
+```R
+# Install/load R package devtools
+install.packages("devtools")
+library(devtools)
+
+# Install/load R package beam from github
+install_github("gleday/shrinkage")
+library(shrinkage)
+```
 
