@@ -105,12 +105,11 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 
 			// Sample from P(\tau^2 | ...)
 			btb = sum(square(theta));
-			switch(prior){
-			case 1:
+			if(prior == 1){
   			gammaminus2 = 1/rgig(ustar, deltaminus2*sigmaminus2*btb, 2);
   			deltaminus2 = R::rgamma(rStar, 1/(0.5*gammaminus2*sigmaminus2*btb + 1));
   			tauminus2 = gammaminus2*deltaminus2;
-			case 2:
+			}else{
 			  tauminus2 = R::rgamma(aStar, 1/(b + 0.5*sigmaminus2*btb));
 			}
 			
@@ -204,7 +203,8 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior,
   //  Gibbs algorithm
   for(int i = 0; i < nruns; i++){
     for(int j = 0; j < thin; j++){
-
+      //Rcpp::Rcout << "#### i = " << i << std::endl;
+      //Rcpp::Rcout << "## j = " << j << std::endl;
       // Sample from P(\beta | ...)
       V = sigmaminus2*(XTX + tauminus2*D);
       betavar = arma::inv_sympd(V);
@@ -215,9 +215,8 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior,
       beta += betamean;
       btDb = sum(d % square(beta));
 
-      switch(prior){
-      case 1:
-        
+      if(prior ==1){
+
         // Sample from P(\tau^2 | ...)
         tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
         
@@ -229,8 +228,8 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior,
         }
         wk /= sum(wk);
         
-      case 2:
-        
+      }else{
+
         // Sample from P(\tau^2 | ...)
         tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*gamma2);
         

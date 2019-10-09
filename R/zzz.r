@@ -3,9 +3,9 @@
 #----------------------------------------------------------#
 
 .checky <- function(){
+  assert_that(is.vector(get("y")), env=parent.frame())
   assert_that(is.numeric(get("y")), env=parent.frame())
   assert_that(not_empty(get("y")), env=parent.frame())
-  assert_that(is.vector(get("y")), env=parent.frame())
   assert_that(noNA(get("y")), env=parent.frame())
   assert_that(all(is.finite(get("y"))), env=parent.frame())
 }
