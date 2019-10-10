@@ -37,7 +37,7 @@
 #' X <- matrix(rnorm(n*p), n, p)
 #' trueBeta <- rep(0, p)
 #' trueBeta[1:10] <- 1
-#' y <- X%*%trueBeta + rnorm(n, sd=0.5)
+#' y <- as.vector(X%*%trueBeta + rnorm(n, sd=0.5))
 #' 
 #' # Run gibbs sampler
 #' res <- br(y, X, prior="bp", a=0.5, b=0.5, mcmc=1000, burnin=1000, thin=10, verbose=TRUE)

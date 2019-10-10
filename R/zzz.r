@@ -3,91 +3,101 @@
 #----------------------------------------------------------#
 
 .checky <- function(){
-  assert_that(is.vector(get("y")), env=parent.frame())
-  assert_that(is.numeric(get("y")), env=parent.frame())
-  assert_that(not_empty(get("y")), env=parent.frame())
-  assert_that(noNA(get("y")), env=parent.frame())
-  assert_that(all(is.finite(get("y"))), env=parent.frame())
+  y <- get("y", envir=parent.frame())
+  assert_that(is.vector(y))
+  assert_that(is.numeric(y))
+  assert_that(not_empty(y))
+  assert_that(noNA(y))
+  assert_that(all(is.finite(y)))
 }
 
 .checkg <- function(){
-  assert_that(is.numeric(get("g")), env=parent.frame())
-  assert_that(not_empty(get("g")), env=parent.frame())
-  assert_that(is.vector(get("g")), env=parent.frame())
-  assert_that(noNA(get("g")), env=parent.frame())
-  assert_that(all(is.finite(get("g"))), env=parent.frame())
+  g <- get("g", envir=parent.frame())
+  assert_that(is.numeric(g))
+  assert_that(not_empty(g))
+  assert_that(is.vector(g))
+  assert_that(noNA(g))
+  assert_that(all(is.finite(g)))
 }
 
 .checkX <- function(){
-  assert_that(is.matrix(get("X")), env=parent.frame())
-  assert_that(not_empty(get("X")), env=parent.frame())
-  assert_that(noNA(get("X")), env=parent.frame())
-  assert_that(all(is.finite(get("X"))), env=parent.frame())
+  X <- get("X", envir=parent.frame())
+  assert_that(is.matrix(X))
+  assert_that(not_empty(X))
+  assert_that(noNA(X))
+  assert_that(all(is.finite(X)))
 }
 
 .checkPrior <- function(){
-  assert_that(is.character(get("prior")), env=parent.frame())
-  assert_that(not_empty(get("prior")), env=parent.frame())
-  assert_that(length(get("prior"))==1, env=parent.frame())
-  assert_that(noNA(get("prior")), env=parent.frame())
+  prior <- get("prior", envir=parent.frame())
+  assert_that(is.character(prior))
+  assert_that(not_empty(prior))
+  assert_that(length(prior)==1)
+  assert_that(noNA(prior))
 }
 
 .checka <- function(){
-  assert_that(is.vector(get("a")), env=parent.frame())
-  assert_that(is.numeric(get("a")), env=parent.frame())
-  assert_that(not_empty(get("a")), env=parent.frame())
-  assert_that(length(get("a"))==1, env=parent.frame())
-  assert_that(noNA(get("a")), env=parent.frame())
-  assert_that(is.finite(get("a")), env=parent.frame())
-  assert_that(get("a")>0, env=parent.frame())
+  a <- get("a", envir=parent.frame())
+  assert_that(is.vector(a))
+  assert_that(is.numeric(a))
+  assert_that(not_empty(a))
+  assert_that(length(a)==1)
+  assert_that(noNA(a))
+  assert_that(is.finite(a))
+  assert_that(a>0)
 }
 
 .checkb <- function(){
-  assert_that(is.vector(get("b")), env=parent.frame())
-  assert_that(is.numeric(get("b")), env=parent.frame())
-  assert_that(not_empty(get("b")), env=parent.frame())
-  assert_that(length(get("b"))==1, env=parent.frame())
-  assert_that(noNA(get("b")), env=parent.frame())
-  assert_that(is.finite(get("b")), env=parent.frame())
-  assert_that(get("b")>0, env=parent.frame())
+  b <- get("b", envir=parent.frame())
+  assert_that(is.vector(b))
+  assert_that(is.numeric(b))
+  assert_that(not_empty(b))
+  assert_that(length(b)==1)
+  assert_that(noNA(b))
+  assert_that(is.finite(b))
+  assert_that(b>0)
 }
 
 .checkc <- function(){
-  assert_that(is.vector(get("c")), env=parent.frame())
-  assert_that(is.numeric(get("c")), env=parent.frame())
-  assert_that(not_empty(get("c")), env=parent.frame())
-  assert_that(length(get("c"))==1, env=parent.frame())
-  assert_that(noNA(get("c")), env=parent.frame())
-  assert_that(is.finite(get("c")), env=parent.frame())
-  assert_that(get("c")>0, env=parent.frame())
+  c <- get("c", envir=parent.frame())
+  assert_that(is.vector(c))
+  assert_that(is.numeric(c))
+  assert_that(not_empty(c))
+  assert_that(length(c)==1)
+  assert_that(noNA(get("c")))
+  assert_that(is.finite(c))
+  assert_that(c>0)
 }
 
 .checkmcmc <- function(){
-  assert_that(is.vector(get("mcmc")), env=parent.frame())
-  assert_that(is.numeric(get("mcmc")), env=parent.frame())
-  assert_that(not_empty(get("mcmc")), env=parent.frame())
-  assert_that(length(get("mcmc"))==1, env=parent.frame())
-  assert_that(noNA(get("mcmc")), env=parent.frame())
-  assert_that(is.finite(get("mcmc")), env=parent.frame())
-  assert_that(get("mcmc")>0, env=parent.frame())
+  mcmc <- get("mcmc", envir=parent.frame())
+  assert_that(is.vector(mcmc))
+  assert_that(is.numeric(mcmc))
+  assert_that(not_empty(mcmc))
+  assert_that(length(mcmc)==1)
+  assert_that(noNA(mcmc))
+  assert_that(is.finite(mcmc))
+  assert_that(mcmc>0)
 }
 
 .checkburnin <- function(){
-  assert_that(is.vector(get("burnin")), env=parent.frame())
-  assert_that(is.numeric(get("burnin")), env=parent.frame())
-  assert_that(not_empty(get("burnin")), env=parent.frame())
-  assert_that(length(get("burnin"))==1, env=parent.frame())
-  assert_that(noNA(get("burnin")), env=parent.frame())
-  assert_that(is.finite(get("burnin")), env=parent.frame())
-  assert_that(get("burnin")>0, env=parent.frame())
+  burnin <- get("burnin", envir=parent.frame())
+  assert_that(is.vector(burnin))
+  assert_that(is.numeric(burnin))
+  assert_that(not_empty(burnin))
+  assert_that(length(burnin)==1)
+  assert_that(noNA(burnin))
+  assert_that(is.finite(burnin))
+  assert_that(burnin>0)
 }
 
 .checkthin <- function(){
-  assert_that(is.vector(get("thin")), env=parent.frame())
-  assert_that(is.numeric(get("thin")), env=parent.frame())
-  assert_that(not_empty(get("thin")), env=parent.frame())
-  assert_that(length(get("thin"))==1, env=parent.frame())
-  assert_that(noNA(get("thin")), env=parent.frame())
-  assert_that(is.finite(get("thin")), env=parent.frame())
-  assert_that(get("thin")>0, env=parent.frame())
+  thin <- get("thin", envir=parent.frame())
+  assert_that(is.vector(thin))
+  assert_that(is.numeric(thin))
+  assert_that(not_empty(thin))
+  assert_that(length(thin)==1)
+  assert_that(noNA(thin))
+  assert_that(is.finite(thin))
+  assert_that(thin>0)
 }
