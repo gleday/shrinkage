@@ -53,7 +53,7 @@
 #' }
 #' 
 #' @export
-bgr <- function(y, X, g, prior = "g", a = 0.5, b = 0.5, c = 1, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
+bgr <- function(y, X, g, prior = "g", a = 1e-05, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
