@@ -1,6 +1,6 @@
 # shrinkage
 An R package implementing various regression models with shrinkage priors, including:
-* ridge (br)
+* Gaussian (ridge) prior with global variance endowed with [inverse-gamma](https://en.wikipedia.org/wiki/Inverse-gamma_distribution), [gamma](https://en.wikipedia.org/wiki/Gamma_distribution), [beta prime](https://en.wikipedia.org/wiki/Beta_prime_distribution) or [inverse-Gaussian](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
 * group ridge (bgr)
 
 To do's:
