@@ -5,7 +5,7 @@
 \title{Bayesian ridge regression}
 \usage{
 ridge(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L,
-  burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE)
+  burnin = 5000L, thin = 10L, verbose = TRUE, light = FALSE)
 }
 \arguments{
 \item{y}{response vector of length n.}
@@ -40,19 +40,37 @@ blablabla
 \examples{
 \dontrun{
 # Generate data
-set.seed(2019)
-n <- 20
-p <- 20
+set.seed(3478)
+n <- 100
+p <- 100
 X <- matrix(rnorm(n*p), n, p)
-trueBeta <- rep(0, p)
-trueBeta[1:10] <- 1
-y <- as.vector(X\%*\%trueBeta + rnorm(n, sd=0.5))
+trueBeta <- rnorm(p, 0, 1)
+y <- as.vector(X\%*\%trueBeta + rnorm(n, sd=1))
 
-# Run gibbs sampler
-res <- ridge(y, X)
+# Ridge with inverse-Gamma prior
+set.seed(1525)
+res1 <- ridge(y, X, prior = "invGamma", a = 1e-04, b = 1e-04, mcmc=10000)
 
-# Extract summary
-res$summary
+# Ridge with Beta-Prime prior
+set.seed(5727)
+res2 <- ridge(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc=10000)
+
+# Ridge with inverse-Gaussian prior
+set.seed(7804)
+res3 <- ridge(y, X, prior = "invGaussian", a = 1, b = 1e-04, mcmc=10000)
+
+# Ridge with Gamma prior
+set.seed(6570)
+res4 <- ridge(y, X, prior = "Gamma", a = 1e-04, b = 1e-04, mcmc=10000)
+
+# Plot posterior densities of \\tau^2
+xs <- sapply(paste0("res", 1:4), function(x){get(x)$tau2s}, simplify=FALSE)
+dens <- lapply(xs, density)
+plot(NA, ylim=c(0, .5), xlim=c(0, 15), ylab="Density", xlab=expression(tau^2))
+#plot(NA, xlim=range(sapply(dens, "[", "x")), ylim=range(sapply(dens, "[", "y")))
+mapply(lines, dens, col=1:length(dens), lwd=2)
+legend("topright", legend=names(dens), fill=1:length(dens), bty="n")
+
 }
 
 }
