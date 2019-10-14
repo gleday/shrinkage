@@ -3,7 +3,6 @@
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
 #' @param g vector of length p for group memberships.
-#' @param prior character. Either "bp" or "g". See Details.
 #' @param a hyperparameter.
 #' @param b hyperparameter.
 #' @param c hyperparameter.
@@ -46,14 +45,14 @@
 #' g <- rep(c(1, 2), 50)
 #' 
 #' # Run gibbs sampler
-#' res <- bgr(y, X, g=g, prior="bp", a=0.5, b=0.5, c=1, mcmc=1000, burnin=1000, thin=10, verbose=TRUE)
+#' res <- gridge(y, X, g)
 #' 
 #' # Extract summary
 #' res$summary
 #' }
 #' 
 #' @export
-bgr <- function(y, X, g, prior = "g", a = 1e-05, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
+gridge <- function(y, X, g, a = 1e-05, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
@@ -67,11 +66,6 @@ bgr <- function(y, X, g, prior = "g", a = 1e-05, b = 1e-05, c = 1, mcmc = 5000L,
   .checkg()
   K <- length(unique(g))
 
-  # Check input argument prior
-  .checkPrior()
-  assert_that(prior%in%c("bp", "g"), msg="'prior' is not recognized")
-  idx <- which(prior==c("g", "bp"))
-  
   # Check input arguments a, b and c
   .checka()
   .checkb()
@@ -87,7 +81,7 @@ bgr <- function(y, X, g, prior = "g", a = 1e-05, b = 1e-05, c = 1, mcmc = 5000L,
   ###########################################
   
   # Gibbs
-  res <- .bgridge(y, X, g, idx, a, b, c, mcmc, burnin, thin, verbose)
+  res <- .bgridge(y, X, g, a, b, c, mcmc, burnin, thin, verbose)
 
   # Summarize samples
   mat <- summarize(res)

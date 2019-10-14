@@ -48,10 +48,11 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 	// Initialisation
 	const double aStar = a + 0.5*p;
 	const double cStar = 0.5*(n+p);
-	const double rStar = b + 0.5*p;
 	const double ustar = a - 0.5*p;
-	double gammaminus2 = 1;
-	double deltaminus2 = 1;
+	const double vstar = -0.5 - 0.5*p;
+	const double wstar = b/(a*a);
+  const double xstar = 2*b;
+	double gamma2 = 1;
 	double tauminus2 = 1;
 	double sigmaminus2 = 1;
 	const int nruns = mcmc + burnin;
@@ -105,12 +106,18 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 
 			// Sample from P(\tau^2 | ...)
 			btb = sum(square(theta));
-			if(prior == 1){
-  			gammaminus2 = 1/rgig(ustar, deltaminus2*sigmaminus2*btb, 2);
-  			deltaminus2 = R::rgamma(rStar, 1/(0.5*gammaminus2*sigmaminus2*btb + 1));
-  			tauminus2 = gammaminus2*deltaminus2;
-			}else{
+			if(prior == 1){ // if \tau^2 ~ invGamma(a, b)
 			  tauminus2 = R::rgamma(aStar, 1/(b + 0.5*sigmaminus2*btb));
+			}
+			if(prior == 2){ // if \tau^2 ~ BetaPrime(a, b)
+			  tauminus2 = 1/rgig(ustar, sigmaminus2*btb, 2*gamma2);
+			  gamma2 = R::rgamma(a+b, 1/(1/tauminus2 + 1));
+			}
+			if(prior == 3){ // if \tau^2 ~ invGaussian(a, b)
+			  tauminus2 = 1/rgig(vstar, b + sigmaminus2*btb, wstar);
+			}
+			if(prior == 4){ // if \tau^2 ~ Gamma(a, b)
+			  tauminus2 = 1/rgig(ustar, sigmaminus2*btb, xstar);
 			}
 			
 			// Sample from P(\sigma^2| ...)
@@ -155,7 +162,7 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 
 
 // [[Rcpp::export(.bgridge)]]
-Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior, const double a = 0.5, const double b = 0.5, const double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, bool light = true){
+Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a = 0.00001, const double b = 0.00001, const double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, bool light = true){
   
   // Dimension data
   const int n = X.n_rows;
@@ -174,7 +181,6 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior,
   const double ustar = a - 0.5*p;
   double tauminus2 = 1;
   double sigmaminus2 = 1;
-  double gamma2 = 1;
   const int nruns = mcmc + burnin;
   arma::colvec wk = ones(K)*1/K;
   arma::colvec d = zeros(p);
@@ -215,37 +221,17 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior,
       beta += betamean;
       btDb = sum(d % square(beta));
 
-      if(prior ==1){
-
-        // Sample from P(\tau^2 | ...)
-        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
-        
-        // Sample from P(\omega_k | ...)
-        for(int u = 0; u < K; u++){
-          indk = find(g == gr(u));
-          bktDbk = sum(square(beta(indk)));
-          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*b);
-        }
-        wk /= sum(wk);
-        
-      }else{
-
-        // Sample from P(\tau^2 | ...)
-        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*gamma2);
-        
-        // Sample from P(\gamma^2 | ...)
-        gamma2 = R::rgamma(a+b, 1/(1/tauminus2 + 1));
-        
-        // Sample from P(\omega_k | ...)
-        for(int u = 0; u < K; u++){
-          indk = find(g == gr(u));
-          bktDbk = sum(square(beta(indk)));
-          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*gamma2);
-        }
-        wk /= sum(wk);
-        
-      }
+      // Sample from P(\tau^2 | ...)
+      tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
       
+      // Sample from P(\omega_k | ...)
+      for(int u = 0; u < K; u++){
+        indk = find(g == gr(u));
+        bktDbk = sum(square(beta(indk)));
+        wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*b);
+      }
+      wk /= sum(wk);
+        
       // Sample from P(\sigma^2| ...)
       for(int u = 0; u < K; u++){
         d(find(g == gr(u))).fill(pk(u)/wk(u));
