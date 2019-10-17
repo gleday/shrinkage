@@ -1,10 +1,13 @@
 //[[Rcpp::depends(RcppArmadillo)]]
+//[[Rcpp::depends(BH)]]
 #include <R.h>
 #include <RcppArmadillo.h>
 #include <math.h>
+#include <boost/math/tools/minima.hpp>
 
 using namespace arma;
 using namespace Rcpp;
+using boost::math::tools::brent_find_minima;
 
 ////////////////////////////////////////////////////
 //-------------- Internal functions --------------//
@@ -29,6 +32,16 @@ colvec rmnorm(const int d) {
   return out;
 }
 
+double logML(const double tauminus2, const int p, const int n, const double yTy, colvec eigs, colvec thet){
+  double out = -0.5*n*log(datum::pi);
+  out += 0.5*p*log(tauminus2);
+  out += lgamma(0.5*n);
+  colvec egs = zeros(p);
+  egs.subvec(0, eigs.n_elem-1) += eigs;
+  out -= 0.5*sum(log(egs + tauminus2));
+  out -= 0.5*n*log(0.5*yTy - 0.5*sum((square(thet)%square(eigs))/(eigs + tauminus2)));
+  return(out);
+}
 
 ////////////////////////////////////////////////////
 //-------------- External functions --------------//
@@ -159,6 +172,83 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 	return out;
 }
 
+// [[Rcpp::export(.bridge_fixed)]]
+Rcpp::List bridge_fixed(arma::colvec y, arma::mat X){ 
+  
+  const int n = X.n_rows;
+  const int p = X.n_cols;
+  
+  // SVD decomposition
+  arma::mat u;
+  arma::colvec d, d2;
+  arma::mat v;
+  if(n >= p){
+    arma::mat XTX = X.t()*X;
+    svd_econ(u, d2, v, XTX, "right");
+    d = sqrt(d2);
+    u = X*v*diagmat(1/d);
+  }
+  else{
+    arma::mat XXT = X*X.t();
+    svd_econ(u, d2, v, XXT, "left");
+    d = sqrt(d2);
+    v = X.t()*u*diagmat(1/d);
+  }
+  
+  // Useful quantities
+  arma::colvec thetahat = (1/d) % (u.cols(0, d.n_elem-1).t()*y);
+  u.clear();
+  const double yTy = sum(square(y));
+  
+  // Values of log-ML for a grid of tauminus2
+  mat gridlambda(100, 2, fill::zeros);
+  gridlambda.col(0) += logspace(-5, 20, 100);
+  for(int j=0; j<100; j++){
+    gridlambda(j, 1) = logML(gridlambda(j, 0), p, n, yTy, d2, thetahat);
+  }
+  
+  // Optimal shrinkage
+  uword idx = gridlambda.col(1).index_max();
+  double lowerVal;
+  double upperVal;
+  if(idx==0){
+    idx = 1;
+  }
+  if(idx==gridlambda.n_rows){
+    idx = idx - 1;
+  }
+  lowerVal = gridlambda(idx-1, 0);
+  upperVal = gridlambda(idx+1, 0);
+  const auto obj = [p, n, yTy, d2, thetahat](double x) { return -logML(x, p, n, yTy, d2, thetahat); };
+  boost::uintmax_t it = 1000;
+  const auto result = brent_find_minima(obj, lowerVal, upperVal, 1000, it);
+  auto lambdaOpt = 0.0, valOpt = 0.0;
+  std::tie(lambdaOpt, valOpt) = result;
+  
+  // Compute marginal posterior means and variances
+  colvec vartheta = 1/(d2+lambdaOpt);
+  colvec thetabar = (d2 % vartheta) % thetahat;
+  colvec betabar = v*thetabar;
+  mat vv = v;
+  v.each_row() %= sqrt(vartheta.t());
+  colvec varbeta = arma::sum(square(v), 1);
+  const double sigma2scale = yTy - sum((square(thetahat)%square(d2))/(d2 + lambdaOpt));
+  varbeta *= sigma2scale / n;
+  
+  // Output object
+  Rcpp::List out = Rcpp::List::create(Rcpp::Named("grid") = gridlambda,
+                                      Rcpp::Named("tauminus2") = lambdaOpt,
+                                      Rcpp::Named("logML") = valOpt,
+                                      Rcpp::Named("thetabar") = thetabar,
+                                      Rcpp::Named("vartheta") = vartheta,
+                                      Rcpp::Named("betabar") = betabar,
+                                      Rcpp::Named("varbeta") = varbeta,
+                                      Rcpp::Named("sigma2scale") = 0.5*sigma2scale,
+                                      Rcpp::Named("v") = vv,
+                                      Rcpp::Named("n") = n);
+  
+  return out;
+}
 
 
 // [[Rcpp::export(.bgridge)]]
@@ -212,6 +302,9 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       //Rcpp::Rcout << "#### i = " << i << std::endl;
       //Rcpp::Rcout << "## j = " << j << std::endl;
       // Sample from P(\beta | ...)
+      Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
+      Rcpp::Rcout << "d = " << d << std::endl;
+      Rcpp::Rcout << "wk = " << wk << std::endl;
       V = sigmaminus2*(XTX + tauminus2*D);
       betavar = arma::inv_sympd(V);
       betamean = sigmaminus2 * betavar * XTy;
@@ -275,3 +368,5 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
 
   return out;
 }
+
+

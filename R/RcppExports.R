@@ -5,6 +5,10 @@
     .Call('_shrinkage_bridge', PACKAGE = 'shrinkage', y, X, prior, a, b, mcmc, burnin, thin, verbose)
 }
 
+.bridge_fixed <- function(y, X) {
+    .Call('_shrinkage_bridge_fixed', PACKAGE = 'shrinkage', y, X)
+}
+
 .bgridge <- function(y, X, g, a = 0.00001, b = 0.00001, c = 1, mcmc = 1000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = TRUE) {
     .Call('_shrinkage_bgridge', PACKAGE = 'shrinkage', y, X, g, a, b, c, mcmc, burnin, thin, verbose, light)
 }

@@ -47,21 +47,25 @@ X <- matrix(rnorm(n*p), n, p)
 trueBeta <- rnorm(p, 0, 1)
 y <- as.vector(X\%*\%trueBeta + rnorm(n, sd=1))
 
+# Ridge with fixed \\tau^2
+set.seed(7216)
+res0 <- ridge(y, X, prior = "ml")
+
 # Ridge with inverse-Gamma prior
 set.seed(1525)
-res1 <- ridge(y, X, prior = "invGamma", a = 1e-04, b = 1e-04, mcmc=10000)
+res1 <- ridge(y, X, prior = "invGamma", a = 1e-05, b = 1e-05)
 
 # Ridge with Beta-Prime prior
 set.seed(5727)
-res2 <- ridge(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc=10000)
+res2 <- ridge(y, X, prior = "BetaPrime", a = 0.5, b = 0.5)
 
 # Ridge with inverse-Gaussian prior
 set.seed(7804)
-res3 <- ridge(y, X, prior = "invGaussian", a = 1, b = 1e-04, mcmc=10000)
+res3 <- ridge(y, X, prior = "invGaussian", a = 1, b = 1e-05)
 
 # Ridge with Gamma prior
 set.seed(6570)
-res4 <- ridge(y, X, prior = "Gamma", a = 1e-04, b = 1e-04, mcmc=10000)
+res4 <- ridge(y, X, prior = "Gamma", a = 1e-05, b = 1e-05)
 
 # Plot posterior densities of \\tau^2
 xs <- sapply(paste0("res", 1:4), function(x){get(x)$tau2s}, simplify=FALSE)
@@ -69,7 +73,8 @@ dens <- lapply(xs, density)
 plot(NA, ylim=c(0, .5), xlim=c(0, 15), ylab="Density", xlab=expression(tau^2))
 #plot(NA, xlim=range(sapply(dens, "[", "x")), ylim=range(sapply(dens, "[", "y")))
 mapply(lines, dens, col=1:length(dens), lwd=2)
-legend("topright", legend=names(dens), fill=1:length(dens), bty="n")
+labs <- c("invGamma", "BetaPrime", "invGaussian", "Gamma")
+legend("topright", legend=labs, fill=1:length(dens), bty="n")
 
 }
 

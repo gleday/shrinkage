@@ -101,3 +101,13 @@
   assert_that(is.finite(thin))
   assert_that(thin>0)
 }
+
+.sampleBetas <- function(nsamp, result){
+  xx <- matrix(rnorm(nsamp * length(as.numeric(result$thetabar))), nrow = nsamp, byrow = TRUE)
+  diagmat <- diag(sqrt((2*result$sigma2scale/result$n)*as.numeric(result$vartheta)))
+  xx <- tcrossprod(xx, diagmat)
+  xx <- sweep(xx, 2, result$thetabar, "+")
+  xx <- tcrossprod(xx, result$v)
+  betas <- xx / sqrt(rchisq(nsamp, result$n)/result$n)
+  betas
+}
