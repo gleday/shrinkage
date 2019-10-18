@@ -75,7 +75,7 @@ plot(NA, ylim=c(0, .5), xlim=c(0, 15), ylab="Density", xlab=expression(tau^2))
 mapply(lines, dens, col=1:length(dens), lwd=2)
 labs <- c("invGamma", "BetaPrime", "invGaussian", "Gamma")
 legend("topright", legend=labs, fill=1:length(dens), bty="n")
-
+abline(v=res0$tau2s, lty=2, lwd=2)
 }
 
 }

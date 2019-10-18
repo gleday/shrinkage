@@ -106,7 +106,7 @@ ridge <- function(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L, 
     res <- list("betas" = .sampleBetas(mcmc, result=res0))
     res$tau2s <- res0$tauminus2
     res$sigma2s <- 1/rgamma(mcmc, shape=res0$n/2, rate=res0$sigma2scale)
-    print(str(res))
+
   }else{
     
     # Gibbs
