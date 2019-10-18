@@ -109,6 +109,10 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 	for(int i = 0; i < nruns; i++){
 		for(int j = 0; j < thin; j++){
 
+		  if((i == 0) && (j == 0) && (burnin>0)){
+		    Rcpp::Rcout << "burnin..." << std::endl;
+		  }
+		  
 			// Sample from P(\theta | ...)
 			thetavar = 1/(square(d) + tauminus2);
 			thetamean = thetavar % duy;

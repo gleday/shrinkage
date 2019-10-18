@@ -77,7 +77,7 @@
   assert_that(length(mcmc)==1)
   assert_that(noNA(mcmc))
   assert_that(is.finite(mcmc))
-  assert_that(mcmc>0)
+  assert_that(mcmc>=0)
 }
 
 .checkburnin <- function(){
@@ -88,7 +88,7 @@
   assert_that(length(burnin)==1)
   assert_that(noNA(burnin))
   assert_that(is.finite(burnin))
-  assert_that(burnin>0)
+  assert_that(burnin>=0)
 }
 
 .checkthin <- function(){
@@ -99,7 +99,7 @@
   assert_that(length(thin)==1)
   assert_that(noNA(thin))
   assert_that(is.finite(thin))
-  assert_that(thin>0)
+  assert_that(thin>=0)
 }
 
 .sampleBetas <- function(nsamp, result){

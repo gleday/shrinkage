@@ -103,10 +103,21 @@ ridge <- function(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L, 
     
     # Closed-form inference
     res0 <- .bridge_fixed(y, X)
-    res <- list("betas" = .sampleBetas(mcmc, result=res0))
-    res$tau2s <- res0$tauminus2
-    res$sigma2s <- 1/rgamma(mcmc, shape=res0$n/2, rate=res0$sigma2scale)
-
+    if(mcmc == 0){
+      
+      matbeta <- cbind(res0$betabar, sqrt((2*res0$sigma2scale/res0$n)*res0$vartheta))
+      colnames(matbeta) <- c("mean", "sd")
+      res <- list("betas" = matbeta)
+      res$tau2s <- 1/res0$tauminus2
+      res$sigma2s <- c("shape" = res0$n/2, "scale" = res0$sigma2scale)
+      
+    }else{
+      
+      res <- list("betas" = .sampleBetas(mcmc, result=res0))
+      res$tau2s <- 1/res0$tauminus2
+      res$sigma2s <- 1/rgamma(mcmc, shape=res0$n/2, rate=res0$sigma2scale)
+      
+    }
   }else{
     
     # Gibbs
@@ -116,21 +127,25 @@ ridge <- function(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L, 
     
   }
   
-  # Summarize samples
-  mat <- summarize(res)
-  print(dim(mat))
-  if(is.null(colnames(X))){
-    rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", "sigma2")
-  }else{
-    rownames(mat) <- c(colnames(X), "tau2", "sigma2")
+  
+  if(mcmc > 0){
+    
+    # Summarize samples
+    mat <- summarize(res)
+    if(is.null(colnames(X))){
+      rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", "sigma2")
+    }else{
+      rownames(mat) <- c(colnames(X), "tau2", "sigma2")
+    }
+    
+    # Output
+    if(light){
+      res <- list("summary" = mat)
+    }else{
+      res <- c(list("summary" = mat), res)
+    }
+    
   }
   
-  # Output
-  if(light){
-    res <- list("summary" = mat)
-  }else{
-    res <- c(list("summary" = mat), res)
-  }
-
   return(res)
 }
