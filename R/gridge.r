@@ -3,7 +3,6 @@
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
 #' @param g vector of length p for group memberships.
-#' @param a hyperparameter.
 #' @param b hyperparameter.
 #' @param c hyperparameter.
 #' @param mcmc integer. Number of desired samples.
@@ -52,7 +51,7 @@
 #' }
 #' 
 #' @export
-gridge <- function(y, X, g, a = 1e-05, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
+gridge <- function(y, X, g, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
@@ -65,9 +64,9 @@ gridge <- function(y, X, g, a = 1e-05, b = 1e-05, c = 1, mcmc = 5000L, burnin = 
   # Check input argument g
   .checkg()
   K <- length(unique(g))
+  a <- K*c
 
   # Check input arguments a, b and c
-  .checka()
   .checkb()
   .checkc()
   
