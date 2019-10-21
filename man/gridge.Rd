@@ -4,8 +4,8 @@
 \alias{gridge}
 \title{Bayesian group ridge regression}
 \usage{
-gridge(y, X, g, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L,
-  thin = 10L, verbose = TRUE, light = FALSE)
+gridge(y, X, g, c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L,
+  eb = 1000L, verbose = TRUE, light = FALSE)
 }
 \arguments{
 \item{y}{response vector of length n.}
@@ -14,8 +14,6 @@ gridge(y, X, g, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L,
 
 \item{g}{vector of length p for group memberships.}
 
-\item{b}{hyperparameter.}
-
 \item{c}{hyperparameter.}
 
 \item{mcmc}{integer. Number of desired samples.}
@@ -23,6 +21,8 @@ gridge(y, X, g, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L,
 \item{burnin}{integer. Number of burn-in samples.}
 
 \item{thin}{integer. Number of consecutive samples to skip.}
+
+\item{eb}{integer. Empirical Bayes carried out every 'eb' iteration.}
 
 \item{verbose}{logical. Whether information on progress should be be printed.}
 

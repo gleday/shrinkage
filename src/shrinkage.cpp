@@ -4,10 +4,16 @@
 #include <RcppArmadillo.h>
 #include <math.h>
 #include <boost/math/tools/minima.hpp>
+#include <boost/math/tools/roots.hpp>
+#include <boost/math/tools/toms748_solve.hpp>
+#include <boost/math/tools/precision.hpp>
 
 using namespace arma;
 using namespace Rcpp;
 using boost::math::tools::brent_find_minima;
+using boost::math::tools::bracket_and_solve_root;
+using boost::math::tools::eps_tolerance;
+
 
 ////////////////////////////////////////////////////
 //-------------- Internal functions --------------//
@@ -256,7 +262,7 @@ Rcpp::List bridge_fixed(arma::colvec y, arma::mat X){
 
 
 // [[Rcpp::export(.bgridge)]]
-Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a = 0.00001, const double b = 0.00001, const double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, bool light = true){
+Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a = 0.00001, const double b = 0.00001, double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, const int step = 1000){
   
   // Dimension data
   const int n = X.n_rows;
@@ -306,9 +312,9 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       //Rcpp::Rcout << "#### i = " << i << std::endl;
       //Rcpp::Rcout << "## j = " << j << std::endl;
       // Sample from P(\beta | ...)
-      Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
-      Rcpp::Rcout << "d = " << d << std::endl;
-      Rcpp::Rcout << "wk = " << wk << std::endl;
+      //Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
+      //Rcpp::Rcout << "d = " << d << std::endl;
+      //Rcpp::Rcout << "wk = " << wk << std::endl;
       V = sigmaminus2*(XTX + tauminus2*D);
       betavar = arma::inv_sympd(V);
       betamean = sigmaminus2 * betavar * XTy;
@@ -351,6 +357,18 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       sigma2samp(k) += 1/sigmaminus2;
       k++;
       
+      // empirical Bayes
+      if(k%step==0){
+        double e = sum(mean(log(wksamp.rows(0, k-1)), 0));
+        const auto obj = [K, e](double c) { return K*R::digamma(c) - R::digamma(K*c) - e; };
+        boost::uintmax_t it = 1000;
+        eps_tolerance<double> tol(20);
+        const auto result = bracket_and_solve_root(obj, c, 2.0, true, tol, it);
+        auto val1 = 0.0, val2 = 0.0;
+        std::tie(val1, val2) = result;
+        c = val1;
+      }
+      
       if(verbose && (k%100==0)){
         Rcpp::Rcout << k << " samples generated" << std::endl;
       }
@@ -367,7 +385,8 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       Rcpp::Named("betas") = betasamp,
       Rcpp::Named("tau2s") = tau2samp,
       Rcpp::Named("ws") = wksamp,
-      Rcpp::Named("sigma2s") = sigma2samp
+      Rcpp::Named("sigma2s") = sigma2samp,
+      Rcpp::Named("c") = c
     );
 
   return out;

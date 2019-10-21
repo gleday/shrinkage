@@ -38,8 +38,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // bgridge
-Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a, const double b, const double c, const int mcmc, const int burnin, const int thin, bool verbose, bool light);
-RcppExport SEXP _shrinkage_bgridge(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP lightSEXP) {
+Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a, const double b, double c, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
+RcppExport SEXP _shrinkage_bgridge(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,13 +48,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::colvec >::type g(gSEXP);
     Rcpp::traits::input_parameter< const double >::type a(aSEXP);
     Rcpp::traits::input_parameter< const double >::type b(bSEXP);
-    Rcpp::traits::input_parameter< const double >::type c(cSEXP);
+    Rcpp::traits::input_parameter< double >::type c(cSEXP);
     Rcpp::traits::input_parameter< const int >::type mcmc(mcmcSEXP);
     Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
     Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< bool >::type light(lightSEXP);
-    rcpp_result_gen = Rcpp::wrap(bgridge(y, X, g, a, b, c, mcmc, burnin, thin, verbose, light));
+    Rcpp::traits::input_parameter< const int >::type step(stepSEXP);
+    rcpp_result_gen = Rcpp::wrap(bgridge(y, X, g, a, b, c, mcmc, burnin, thin, verbose, step));
     return rcpp_result_gen;
 END_RCPP
 }

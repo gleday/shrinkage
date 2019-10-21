@@ -3,11 +3,11 @@
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
 #' @param g vector of length p for group memberships.
-#' @param b hyperparameter.
 #' @param c hyperparameter.
 #' @param mcmc integer. Number of desired samples.
 #' @param burnin integer. Number of burn-in samples.
 #' @param thin integer. Number of consecutive samples to skip.
+#' @param eb integer. Empirical Bayes carried out every 'eb' iteration.
 #' @param verbose logical. Whether information on progress should be be printed.
 #' @param light logical. If TRUE, only return a summary of the samples. 
 #'
@@ -51,7 +51,7 @@
 #' }
 #' 
 #' @export
-gridge <- function(y, X, g, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE, light = FALSE){
+gridge <- function(y, X, g, c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, eb = 1000L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
@@ -64,11 +64,12 @@ gridge <- function(y, X, g, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin
   # Check input argument g
   .checkg()
   K <- length(unique(g))
-  a <- K*c
 
-  # Check input arguments a, b and c
-  .checkb()
+  # Check input arguments c
+  ifelse(is.null(c), c <- 1, eb <- mcmc + burnin)
   .checkc()
+  a <- K*c
+  b <- 1e-05 * sqrt(c)
   
   # Check input arguments mcmc, burnin and thin
   .checkmcmc()
@@ -80,10 +81,10 @@ gridge <- function(y, X, g, b = 1e-05, c = 1, mcmc = 5000L, burnin = 1000L, thin
   ###########################################
   
   # Gibbs
-  res <- .bgridge(y, X, g, a, b, c, mcmc, burnin, thin, verbose)
+  res <- .bgridge(y, X, g, a, b, c, mcmc, burnin, thin, verbose, eb)
 
   # Summarize samples
-  mat <- summarize(res)
+  mat <- summarize(res[-5])
   if(is.null(colnames(X))){
     rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", paste0("w", 1:K), "sigma2")
   }else{
