@@ -4,8 +4,9 @@
 \alias{gridge}
 \title{Bayesian group ridge regression}
 \usage{
-gridge(y, X, g, c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L,
-  eb = 1000L, verbose = TRUE, light = FALSE)
+gridge(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L,
+  burnin = 1000L, thin = 10L, eb = 1000L, verbose = TRUE,
+  light = FALSE)
 }
 \arguments{
 \item{y}{response vector of length n.}
@@ -13,6 +14,8 @@ gridge(y, X, g, c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L,
 \item{X}{n by p data matrix.}
 
 \item{g}{vector of length p for group memberships.}
+
+\item{prior}{character. Either "Gamma" or "BetaPrime". See Details.}
 
 \item{c}{hyperparameter.}
 

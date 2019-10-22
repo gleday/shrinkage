@@ -3,6 +3,7 @@
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
 #' @param g vector of length p for group memberships.
+#' @param prior character. Either "Gamma" or "BetaPrime". See Details.
 #' @param c hyperparameter.
 #' @param mcmc integer. Number of desired samples.
 #' @param burnin integer. Number of burn-in samples.
@@ -51,7 +52,7 @@
 #' }
 #' 
 #' @export
-gridge <- function(y, X, g, c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, eb = 1000L, verbose = TRUE, light = FALSE){
+gridge <- function(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, eb = 1000L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
@@ -64,12 +65,24 @@ gridge <- function(y, X, g, c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, 
   # Check input argument g
   .checkg()
   K <- length(unique(g))
+  
+  # Check input argument prior
+  .checkPrior()
+  assert_that(prior%in%c("Gamma", "BetaPrime"), msg="'prior' is not recognized")
+  idx <- which(prior==c("Gamma", "BetaPrime"))
 
   # Check input arguments c
   ifelse(is.null(c), c <- 1, eb <- mcmc + burnin)
   .checkc()
   a <- K*c
-  b <- 1e-05 * sqrt(c)
+  if(prior == 1){
+    b <- 1e-05 * sqrt(c)
+  }else{
+    b <- a
+  }
+  cat("a = ", a, "\n")
+  cat("b = ", b, "\n")
+  cat("c = ", c, "\n")
   
   # Check input arguments mcmc, burnin and thin
   .checkmcmc()
@@ -81,7 +94,7 @@ gridge <- function(y, X, g, c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, 
   ###########################################
   
   # Gibbs
-  res <- .bgridge(y, X, g, a, b, c, mcmc, burnin, thin, verbose, eb)
+  res <- .bgridge(y, X, g, idx, a, b, c, mcmc, burnin, thin, verbose, eb)
 
   # Summarize samples
   mat <- summarize(res[-5])

@@ -262,7 +262,7 @@ Rcpp::List bridge_fixed(arma::colvec y, arma::mat X){
 
 
 // [[Rcpp::export(.bgridge)]]
-Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a = 0.00001, const double b = 0.00001, double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, const int step = 1000){
+Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, double a = 0.00001, double b = 0.00001, double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, const int step = 1000){
   
   // Dimension data
   const int n = X.n_rows;
@@ -278,9 +278,10 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
 
   // Initialisation
   const double cStar = 0.5*(n+p);
-  const double ustar = a - 0.5*p;
+  double ustar = a - 0.5*p;
   double tauminus2 = 1;
   double sigmaminus2 = 1;
+  double gamma2 = 1;
   const int nruns = mcmc + burnin;
   arma::colvec wk = ones(K)*1/K;
   arma::colvec d = zeros(p);
@@ -312,9 +313,14 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       //Rcpp::Rcout << "#### i = " << i << std::endl;
       //Rcpp::Rcout << "## j = " << j << std::endl;
       // Sample from P(\beta | ...)
-      //Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
-      //Rcpp::Rcout << "d = " << d << std::endl;
+      Rcpp::Rcout << "c = " << c << std::endl;
+      Rcpp::Rcout << "dStar = " << dStar << std::endl;
+      Rcpp::Rcout << "sigmaminus2 = " << sigmaminus2 << std::endl;
+      Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
+      Rcpp::Rcout << "d.min() = " << d.min() << std::endl;
+      Rcpp::Rcout << "d.max() = " << d.max() << std::endl;
       //Rcpp::Rcout << "wk = " << wk << std::endl;
+      
       V = sigmaminus2*(XTX + tauminus2*D);
       betavar = arma::inv_sympd(V);
       betamean = sigmaminus2 * betavar * XTy;
@@ -324,17 +330,37 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       beta += betamean;
       btDb = sum(d % square(beta));
 
-      // Sample from P(\tau^2 | ...)
-      tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
-      
-      // Sample from P(\omega_k | ...)
-      for(int u = 0; u < K; u++){
-        indk = find(g == gr(u));
-        bktDbk = sum(square(beta(indk)));
-        wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*b);
-      }
-      wk /= sum(wk);
+      if(prior == 1){
         
+        // Sample from P(\tau^2 | ...)
+        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
+        
+        // Sample from P(\omega_k | ...)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktDbk = sum(square(beta(indk)));
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*b);
+        }
+        wk /= sum(wk);
+        
+      }else{
+        
+        // Sample from P(\tau^2 | ...)
+        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*gamma2);
+        
+        // Sample from P(\gamma^2 | ...)
+        gamma2 = R::rgamma(a+b, 1/(1/tauminus2 + 1));
+        
+        // Sample from P(\omega_k | ...)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktDbk = sum(square(beta(indk)));
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*gamma2);
+        }
+        wk /= sum(wk);
+        
+      }
+      
       // Sample from P(\sigma^2| ...)
       for(int u = 0; u < K; u++){
         d(find(g == gr(u))).fill(pk(u)/wk(u));
@@ -346,6 +372,9 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       btDb = sum(d % square(beta));
       resid = y-X*beta;
       dStar = 0.5*( sum(square(resid)) + tauminus2*btDb );
+      if(dStar > std::numeric_limits<float>::max()){
+        dStar = std::numeric_limits<float>::max();
+      }
       sigmaminus2 = R::rgamma(cStar, 1/dStar);
     }
     
@@ -359,14 +388,30 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const double a =
       
       // empirical Bayes
       if(k%step==0){
-        double e = sum(mean(log(wksamp.rows(0, k-1)), 0));
-        const auto obj = [K, e](double c) { return K*R::digamma(c) - R::digamma(K*c) - e; };
+        // estimate c
+        double elogwk = sum(mean(log(wksamp.rows(0, k-1)), 0));
+        //double elogtau2 = mean(log(tau2samp.subvec(0, k-1)));
+        //double etau2 = mean(tau2samp.subvec(0, k-1));// K*R::digamma(c) - R::digamma(K*c) - e
+        const auto obj = [K, elogwk](double c) { return K*R::digamma(c) - R::digamma(K*c) - elogwk; };
+        //const auto obj = [K, elogwk, elogtau2, etau2](double c) { return K*R::digamma(c) - elogwk + 0.00001*0.5*(1/sqrt(c))*etau2 - K*elogtau2 - 0.5*(K/c) - 0.5*K*log(c) + 5*K*log(10); };
         boost::uintmax_t it = 1000;
         eps_tolerance<double> tol(20);
         const auto result = bracket_and_solve_root(obj, c, 2.0, true, tol, it);
         auto val1 = 0.0, val2 = 0.0;
         std::tie(val1, val2) = result;
         c = val1;
+        
+        Rcpp::Rcout << "val1 = " << val1 << std::endl;
+        Rcpp::Rcout << "val2 = " << val2 << std::endl;
+        
+        // update a and b
+        a = K*c;
+        if(prior == 1){
+          b = 0.00001*sqrt(c);
+        }else{
+          b = a;
+        }
+        ustar = a - 0.5*p;
       }
       
       if(verbose && (k%100==0)){
