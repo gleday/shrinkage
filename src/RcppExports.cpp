@@ -6,9 +6,9 @@
 
 using namespace Rcpp;
 
-// bridge
-Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a, const double b, const int mcmc, const int burnin, const int thin, bool verbose);
-RcppExport SEXP _shrinkage_bridge(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP) {
+// ridge
+Rcpp::List ridge(arma::colvec y, arma::mat X, const int prior, const double a, const double b, const int mcmc, const int burnin, const int thin, bool verbose);
+RcppExport SEXP _shrinkage_ridge(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,25 +21,46 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
     Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(bridge(y, X, prior, a, b, mcmc, burnin, thin, verbose));
+    rcpp_result_gen = Rcpp::wrap(ridge(y, X, prior, a, b, mcmc, burnin, thin, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
-// bridge_fixed
-Rcpp::List bridge_fixed(arma::colvec y, arma::mat X);
-RcppExport SEXP _shrinkage_bridge_fixed(SEXP ySEXP, SEXP XSEXP) {
+// ridge_fixed
+Rcpp::List ridge_fixed(arma::colvec y, arma::mat X);
+RcppExport SEXP _shrinkage_ridge_fixed(SEXP ySEXP, SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
-    rcpp_result_gen = Rcpp::wrap(bridge_fixed(y, X));
+    rcpp_result_gen = Rcpp::wrap(ridge_fixed(y, X));
     return rcpp_result_gen;
 END_RCPP
 }
-// bgridge
-Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior, double a, double b, double c, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
-RcppExport SEXP _shrinkage_bgridge(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
+// gridge
+Rcpp::List gridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior, double a, double b, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
+RcppExport SEXP _shrinkage_gridge(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type g(gSEXP);
+    Rcpp::traits::input_parameter< const int >::type prior(priorSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< const int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
+    Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< const int >::type step(stepSEXP);
+    rcpp_result_gen = Rcpp::wrap(gridge(y, X, g, prior, a, b, mcmc, burnin, thin, verbose, step));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gd
+Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior, double a, double b, double c, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
+RcppExport SEXP _shrinkage_gd(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -55,15 +76,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< const int >::type step(stepSEXP);
-    rcpp_result_gen = Rcpp::wrap(bgridge(y, X, g, prior, a, b, c, mcmc, burnin, thin, verbose, step));
+    rcpp_result_gen = Rcpp::wrap(gd(y, X, g, prior, a, b, c, mcmc, burnin, thin, verbose, step));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_shrinkage_bridge", (DL_FUNC) &_shrinkage_bridge, 9},
-    {"_shrinkage_bridge_fixed", (DL_FUNC) &_shrinkage_bridge_fixed, 2},
-    {"_shrinkage_bgridge", (DL_FUNC) &_shrinkage_bgridge, 12},
+    {"_shrinkage_ridge", (DL_FUNC) &_shrinkage_ridge, 9},
+    {"_shrinkage_ridge_fixed", (DL_FUNC) &_shrinkage_ridge_fixed, 2},
+    {"_shrinkage_gridge", (DL_FUNC) &_shrinkage_gridge, 11},
+    {"_shrinkage_gd", (DL_FUNC) &_shrinkage_gd, 12},
     {NULL, NULL, 0}
 };
 

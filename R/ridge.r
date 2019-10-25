@@ -104,7 +104,7 @@ ridge <- function(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L, 
   if(prior %in% c("ml", "cpo")){
     
     # Closed-form inference
-    res0 <- .bridge_fixed(y, X)
+    res0 <- .ridge_fixed(y, X)
     if(mcmc == 0){
       
       matbeta <- cbind(res0$betabar, sqrt((2*res0$sigma2scale/res0$n)*res0$vartheta))
@@ -123,7 +123,7 @@ ridge <- function(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L, 
   }else{
     
     # Gibbs
-    res <- .bridge(y, X, idx, a, b, mcmc, burnin, thin, verbose)
+    res <- .ridge(y, X, idx, a, b, mcmc, burnin, thin, verbose)
     res$tau2s <- res$tau2s[,1]
     res$sigma2s <- res$sigma2s[,1]
     

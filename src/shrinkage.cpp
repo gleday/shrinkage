@@ -57,8 +57,8 @@ double logML(const double tauminus2, const int p, const int n, const double yTy,
 // - implement empirical Bayes ML-based estimation of \tau^2.
 // ( -> add argument prior = c("bp", "ig", "ml")?)
 
-// [[Rcpp::export(.bridge)]]
-Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a = 0.5, const double b = 0.5, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true){
+// [[Rcpp::export(.ridge)]]
+Rcpp::List ridge(arma::colvec y, arma::mat X, const int prior, const double a = 0.5, const double b = 0.5, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true){
 
 	// Dimension data
 	const int n = X.n_rows;
@@ -186,8 +186,8 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 	return out;
 }
 
-// [[Rcpp::export(.bridge_fixed)]]
-Rcpp::List bridge_fixed(arma::colvec y, arma::mat X){ 
+// [[Rcpp::export(.ridge_fixed)]]
+Rcpp::List ridge_fixed(arma::colvec y, arma::mat X){ 
   
   const int n = X.n_rows;
   const int p = X.n_cols;
@@ -265,8 +265,8 @@ Rcpp::List bridge_fixed(arma::colvec y, arma::mat X){
 }
 
 
-// [[Rcpp::export(.bgridge)]]
-Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, double a = 0.00001, double b = 0.00001, double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, const int step = 1000){
+// [[Rcpp::export(.gridge)]]
+Rcpp::List gridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, double a = 0.00001, double b = 0.00001, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, const int step = 1000){
   
   // Dimension data
   const int n = X.n_rows;
@@ -281,6 +281,184 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior 
   }
 
   // Initialisation
+  arma::colvec aStar = ones(K);
+  arma::colvec ustar = ones(K);
+  arma::colvec vstar = ones(K);
+  const double wstar = b/(a*a);
+  const double xstar = 2*b;
+  const double cStar = 0.5*(n+p);
+  arma::colvec tauminus2 = ones(K);
+  double sigmaminus2 = 1;
+  arma::colvec gamma2 = ones(K);
+  const int nruns = mcmc + burnin;
+  arma::colvec wk = ones(K)*1/K;
+  arma::colvec d = zeros(p);
+  for(int u = 0; u < K; u++){
+    d(find(g == gr(u))).fill(tauminus2(u));
+    aStar(u) = a + 0.5*pk(u);
+    ustar(u) = a - 0.5*pk(u);
+    vstar(u) = -0.5 - 0.5*pk(u);
+  }
+  arma::mat D = diagmat(d);
+
+  // Useful quantities
+  arma::mat XTX = X.t()*X;
+  arma::mat XTy = X.t()*y;
+  
+  // MCMC samples
+  arma::mat betasamp = zeros(mcmc, p);
+  arma::mat tau2samp = zeros(mcmc, K);
+  arma::colvec sigma2samp = zeros(mcmc);
+  arma::mat betavar, cholvar;
+  arma::colvec betamean, resid;
+  arma::colvec beta(p);
+  double btDb, bktbk, dStar;
+  uvec indk;
+  int k = 0;
+  int th = 1;
+  arma::mat V;
+
+  //  Gibbs algorithm
+  for(int i = 0; i < nruns; i++){
+    for(int j = 0; j < th; j++){
+      //Rcpp::Rcout << "#### i = " << i << std::endl;
+      //Rcpp::Rcout << "## j = " << j << std::endl;
+      // Sample from P(\beta | ...)
+      //Rcpp::Rcout << "k = " << k << std::endl;
+      //Rcpp::Rcout << "c = " << c << std::endl;
+      //Rcpp::Rcout << "dStar = " << dStar << std::endl;
+      //Rcpp::Rcout << "sigmaminus2 = " << sigmaminus2 << std::endl;
+      //Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
+      //Rcpp::Rcout << "d.min() = " << d.min() << std::endl;
+      //Rcpp::Rcout << "d.max() = " << d.max() << std::endl;
+      //Rcpp::Rcout << "wk = " << wk << std::endl;
+      
+      V = sigmaminus2*(XTX + D);
+      betavar = arma::inv_sympd(V);
+      betamean = sigmaminus2 * betavar * XTy;
+      beta = rmnorm(p);
+      cholvar = arma::chol(betavar);
+      beta = trans(beta.t() * cholvar);
+      beta += betamean;
+
+      // Sample from P(\tau_k^2 | ...)
+      if(prior == 1){ // if \tau_k^2 ~ invGamma(a, b)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktbk = sum(square(beta(indk)));
+          tauminus2(u) = R::rgamma(aStar(u), 1/(b + 0.5*sigmaminus2*bktbk));
+        }
+      }
+      if(prior == 2){ // if \tau_k^2 ~ BetaPrime(a, b)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktbk = sum(square(beta(indk)));
+          tauminus2(u) = 1/rgig(ustar(u), sigmaminus2*bktbk, 2*gamma2(u));
+          gamma2(u) = R::rgamma(a+b, 1/(1/tauminus2(u) + 1));
+        }
+      }
+      if(prior == 3){ // if \tau_k^2 ~ invGaussian(a, b)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktbk = sum(square(beta(indk)));
+          tauminus2(u) = 1/rgig(vstar(u), b + sigmaminus2*bktbk, wstar);
+        }
+      }
+      if(prior == 4){ // if \tau_k^2 ~ Gamma(a, b)
+        for(int u = 0; u < K; u++){
+          indk = find(g == gr(u));
+          bktbk = sum(square(beta(indk)));
+          tauminus2(u) = 1/rgig(ustar(u), sigmaminus2*bktbk, xstar);
+        }
+      }
+
+      // Sample from P(\sigma^2| ...)
+      for(int u = 0; u < K; u++){
+        d(find(g == gr(u))).fill(tauminus2(u));
+      }
+      if(d.max() > std::numeric_limits<float>::max()){
+        d(find(d > std::numeric_limits<float>::max())).fill(std::numeric_limits<float>::max());
+      }
+      D = diagmat(d);
+      btDb = sum(d % square(beta));
+      resid = y-X*beta;
+      dStar = 0.5*( sum(square(resid)) + btDb );
+      if(dStar > std::numeric_limits<float>::max()){
+        dStar = std::numeric_limits<float>::max();
+      }
+      sigmaminus2 = R::rgamma(cStar, 1/dStar);
+      
+    }
+    
+    // Save samples
+    if(i >= burnin){
+      if(k == 0){
+        th = thin;
+      }
+      betasamp.row(k) += beta.t();
+      tau2samp.row(k) += 1/(tauminus2.t());
+      sigma2samp(k) += 1/sigmaminus2;
+      k++;
+      
+      // empirical Bayes
+      if(k%step==0){
+        // estimate c
+        //double elogwk = sum(mean(log(wksamp.rows(0, k-1)), 0));
+        //double elogtau2 = mean(log(tau2samp.subvec(0, k-1)));
+        //double etau2 = mean(tau2samp.subvec(0, k-1));// K*R::digamma(c) - R::digamma(K*c) - e
+        //const auto obj = [K, elogwk](double c) { return K*R::digamma(c) - R::digamma(K*c) - elogwk; };
+        //const auto obj = [K, elogwk, elogtau2, etau2](double c) { return K*R::digamma(c) - elogwk + 0.00001*0.5*(1/sqrt(c))*etau2 - K*elogtau2 - 0.5*(K/c) - 0.5*K*log(c) + 5*K*log(10); };
+        //boost::uintmax_t it = 1000;
+        //eps_tolerance<double> tol(20);
+        //const auto result = bracket_and_solve_root(obj, c, 2.0, true, tol, it);
+        //auto val1 = 0.0, val2 = 0.0;
+        //std::tie(val1, val2) = result;
+        //c = val1;
+        
+        //Rcpp::Rcout << "val1 = " << val1 << std::endl;
+        //Rcpp::Rcout << "val2 = " << val2 << std::endl;
+        
+      }
+      
+      if(verbose && (k%100==0)){
+        Rcpp::Rcout << k << " samples generated" << std::endl;
+      }
+    }
+    
+  }
+  
+  if(verbose){
+    Rcpp::Rcout << "Thanks, that's enough." << std::endl;
+  }
+  
+  // Output
+  Rcpp::List out = Rcpp::List::create(
+      Rcpp::Named("betas") = betasamp,
+      Rcpp::Named("tau2s") = tau2samp,
+      Rcpp::Named("sigma2s") = sigma2samp,
+      Rcpp::Named("a") = a,
+      Rcpp::Named("b") = b
+    );
+
+  return out;
+}
+
+// [[Rcpp::export(.gd)]]
+Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, double a = 0.00001, double b = 0.00001, double c = 1, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true, const int step = 1000){
+  
+  // Dimension data
+  const int n = X.n_rows;
+  const int p = X.n_cols;
+  
+  // Group sizes
+  arma::colvec gr = unique(g);
+  const int K = gr.n_elem;
+  arma::colvec pk = zeros(gr.n_elem);
+  for(int u = 0; u < K; u++){
+    pk(u) += sum(g == gr(u));
+  }
+  
+  // Initialisation
   const double cStar = 0.5*(n+p);
   double ustar = a - 0.5*p;
   double tauminus2 = 1;
@@ -293,7 +471,7 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior 
     d(find(g == gr(u))).fill(pk(u)/wk(u));
   }
   arma::mat D = diagmat(d);
-
+  
   // Useful quantities
   arma::mat XTX = X.t()*X;
   arma::mat XTy = X.t()*y;
@@ -335,7 +513,7 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior 
       beta = trans(beta.t() * cholvar);
       beta += betamean;
       btDb = sum(d % square(beta));
-
+      
       if(prior == 1){
         
         // Sample from P(\tau^2 | ...)
@@ -436,14 +614,13 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior 
   
   // Output
   Rcpp::List out = Rcpp::List::create(
-      Rcpp::Named("betas") = betasamp,
-      Rcpp::Named("tau2s") = tau2samp,
-      Rcpp::Named("ws") = wksamp,
-      Rcpp::Named("sigma2s") = sigma2samp,
-      Rcpp::Named("c") = c
-    );
-
+    Rcpp::Named("betas") = betasamp,
+    Rcpp::Named("tau2s") = tau2samp,
+    Rcpp::Named("ws") = wksamp,
+    Rcpp::Named("sigma2s") = sigma2samp,
+    Rcpp::Named("c") = c
+  );
+  
   return out;
 }
-
 

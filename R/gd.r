@@ -1,15 +1,14 @@
-#' Bayesian group ridge regression
+#' Bayesian regression using the Gamma-Dirichlet prior
 #'
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
 #' @param g vector of group memberships.
 #' @param prior character. See Details.
-#' @param a hyperparameter.
-#' @param b hyperparameter.
+#' @param c hyperparameter.
 #' @param mcmc integer. Number of desired samples.
 #' @param burnin integer. Number of burn-in samples.
 #' @param thin integer. Number of consecutive samples to skip.
-#' @param ebstep integer. Empirical Bayes for a and b carried out every 'ebstep' iteration.
+#' @param ebstep integer. Empirical Bayes for c carried out every 'ebstep' iteration.
 #' @param verbose logical. Whether information on progress should be printed.
 #' @param light logical. If TRUE, only return a summary of the samples. 
 #'
@@ -48,14 +47,14 @@
 #' g <- rep(c(1, 2), 50)
 #' 
 #' # Run gibbs sampler
-#' res <- gridge(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05)
+#' res <- GD(y, X, g)
 #' 
 #' # Extract summary
 #' res$summary
 #' }
 #' 
 #' @export
-gridge <- function(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L, burnin = 1000L, thin = 10L, ebstep = 1000L, verbose = TRUE, light = FALSE){
+gd <- function(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, ebstep = 1000L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
@@ -71,13 +70,18 @@ gridge <- function(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 500
   
   # Check input argument prior
   .checkPrior()
-  pr <- c("invGamma", "BetaPrime", "invGaussian", "Gamma")
-  assert_that(prior%in%c(pr, "ml", "cpo"), msg="'prior' is not recognized")
-  idx <- which(prior==pr)
+  assert_that(prior%in%c("Gamma", "BetaPrime"), msg="'prior' is not recognized")
+  idx <- which(prior==c("Gamma", "BetaPrime"))
   
-  # Check input arguments a and b
-  .checka()
-  .checkb()
+  # Check input arguments c
+  ifelse(is.null(c), c <- 1, ebstep <- mcmc + burnin)
+  .checkc()
+  a <- K*c
+  if(prior == 1){
+    b <- 1e-05 * sqrt(c)
+  }else{
+    b <- a
+  }
   
   # Check input arguments mcmc, burnin and thin
   .checkmcmc()
@@ -89,11 +93,11 @@ gridge <- function(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 500
   ###########################################
   
   # Gibbs
-  res <- .gridge(y, X, g, idx, a, b, mcmc, burnin, thin, verbose, ebstep)
-
+  res <- .gd(y, X, g, idx, a, b, c, mcmc, burnin, thin, verbose, ebstep)
+  
   # Summarize samples
   mat <- summarize(res[-5])
-
+  
   if(is.null(colnames(X))){
     rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", paste0("w", 1:K), "sigma2")
   }else{
