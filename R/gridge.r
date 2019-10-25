@@ -2,14 +2,14 @@
 #'
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
-#' @param g vector of length p for group memberships.
-#' @param prior character. Either "Gamma" or "BetaPrime". See Details.
+#' @param g vector of group memberships.
+#' @param prior character. See Details.
 #' @param c hyperparameter.
 #' @param mcmc integer. Number of desired samples.
 #' @param burnin integer. Number of burn-in samples.
 #' @param thin integer. Number of consecutive samples to skip.
-#' @param eb integer. Empirical Bayes carried out every 'eb' iteration.
-#' @param verbose logical. Whether information on progress should be be printed.
+#' @param ebstep integer. Empirical Bayes for c carried out every 'ebstep' iteration.
+#' @param verbose logical. Whether information on progress should be printed.
 #' @param light logical. If TRUE, only return a summary of the samples. 
 #'
 #' @description 
@@ -52,7 +52,7 @@
 #' }
 #' 
 #' @export
-gridge <- function(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, eb = 1000L, verbose = TRUE, light = FALSE){
+gridge <- function(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L, burnin = 1000L, thin = 10L, ebstep = 1000L, verbose = TRUE, light = FALSE){
   
   ###########################################
   #              PREPROCESSING              #
@@ -80,10 +80,7 @@ gridge <- function(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L, burnin = 10
   }else{
     b <- a
   }
-  cat("a = ", a, "\n")
-  cat("b = ", b, "\n")
-  cat("c = ", c, "\n")
-  
+
   # Check input arguments mcmc, burnin and thin
   .checkmcmc()
   .checkburnin()
@@ -98,10 +95,11 @@ gridge <- function(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L, burnin = 10
 
   # Summarize samples
   mat <- summarize(res[-5])
+
   if(is.null(colnames(X))){
     rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", paste0("w", 1:K), "sigma2")
   }else{
-    rownames(mat) <- c(colnames(X), "tau2", "sigma2")
+    rownames(mat) <- c(colnames(X), "tau2", paste0("w", 1:K), "sigma2")
   }
   
   # Output

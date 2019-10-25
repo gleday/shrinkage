@@ -2,13 +2,13 @@
 #'
 #' @param y response vector of length n.
 #' @param X n by p data matrix.
-#' @param prior character. Either "bp", "ig", "ml" or "cpo". See Details.
+#' @param prior character. See Details.
 #' @param a hyperparameter.
 #' @param b hyperparameter.
 #' @param mcmc integer. Number of desired samples.
 #' @param burnin integer. Number of burn-in samples.
 #' @param thin integer. Number of consecutive samples to skip.
-#' @param verbose logical. Whether information on progress should be be printed.
+#' @param verbose logical. Whether information on progress should be printed.
 #' @param light logical. If TRUE, only return a summary of the samples. 
 #'
 #' @description 

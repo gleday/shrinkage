@@ -12,7 +12,7 @@ ridge(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L,
 
 \item{X}{n by p data matrix.}
 
-\item{prior}{character. Either "bp", "ig", "ml" or "cpo". See Details.}
+\item{prior}{character. See Details.}
 
 \item{a}{hyperparameter.}
 
@@ -24,7 +24,7 @@ ridge(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L,
 
 \item{thin}{integer. Number of consecutive samples to skip.}
 
-\item{verbose}{logical. Whether information on progress should be be printed.}
+\item{verbose}{logical. Whether information on progress should be printed.}
 
 \item{light}{logical. If TRUE, only return a summary of the samples.}
 }

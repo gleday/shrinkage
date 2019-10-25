@@ -110,10 +110,11 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 	double btb;
 	double dStar;
 	int k = 0;
+	int th = 0;
 
 	//  Gibbs algorithm
 	for(int i = 0; i < nruns; i++){
-		for(int j = 0; j < thin; j++){
+		for(int j = 0; j < th; j++){
 
 		  if((i == 0) && (j == 0) && (burnin>0)){
 		    Rcpp::Rcout << "burnin..." << std::endl;
@@ -153,6 +154,9 @@ Rcpp::List bridge(arma::colvec y, arma::mat X, const int prior, const double a =
 		// Save samples
 		if(i >= burnin){
 
+		  if(k == 0){
+		    th = thin;
+		  }
 			thetasamp.row(k) += theta.t();
 			tau2samp(k) += 1/(tauminus2);
 			sigma2samp(k) += 1/sigmaminus2;
@@ -305,20 +309,22 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior 
   double btDb, bktDbk, dStar;
   uvec indk;
   int k = 0;
+  int th = 1;
   arma::mat V;
   
   //  Gibbs algorithm
   for(int i = 0; i < nruns; i++){
-    for(int j = 0; j < thin; j++){
-      //Rcpp::Rcout << "#### i = " << i << std::endl;
+    for(int j = 0; j < th; j++){
+      Rcpp::Rcout << "#### i = " << i << std::endl;
       //Rcpp::Rcout << "## j = " << j << std::endl;
       // Sample from P(\beta | ...)
-      Rcpp::Rcout << "c = " << c << std::endl;
-      Rcpp::Rcout << "dStar = " << dStar << std::endl;
-      Rcpp::Rcout << "sigmaminus2 = " << sigmaminus2 << std::endl;
-      Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
-      Rcpp::Rcout << "d.min() = " << d.min() << std::endl;
-      Rcpp::Rcout << "d.max() = " << d.max() << std::endl;
+      Rcpp::Rcout << "k = " << k << std::endl;
+      //Rcpp::Rcout << "c = " << c << std::endl;
+      //Rcpp::Rcout << "dStar = " << dStar << std::endl;
+      //Rcpp::Rcout << "sigmaminus2 = " << sigmaminus2 << std::endl;
+      //Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
+      //Rcpp::Rcout << "d.min() = " << d.min() << std::endl;
+      //Rcpp::Rcout << "d.max() = " << d.max() << std::endl;
       //Rcpp::Rcout << "wk = " << wk << std::endl;
       
       V = sigmaminus2*(XTX + tauminus2*D);
@@ -380,6 +386,9 @@ Rcpp::List bgridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior 
     
     // Save samples
     if(i >= burnin){
+      if(k == 0){
+        th = thin;
+      }
       betasamp.row(k) += beta.t();
       tau2samp(k) += 1/(tauminus2);
       wksamp.row(k) += wk.t();

@@ -5,7 +5,7 @@
 \title{Bayesian group ridge regression}
 \usage{
 gridge(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L,
-  burnin = 1000L, thin = 10L, eb = 1000L, verbose = TRUE,
+  burnin = 1000L, thin = 10L, ebstep = 1000L, verbose = TRUE,
   light = FALSE)
 }
 \arguments{
@@ -13,9 +13,9 @@ gridge(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L,
 
 \item{X}{n by p data matrix.}
 
-\item{g}{vector of length p for group memberships.}
+\item{g}{vector of group memberships.}
 
-\item{prior}{character. Either "Gamma" or "BetaPrime". See Details.}
+\item{prior}{character. See Details.}
 
 \item{c}{hyperparameter.}
 
@@ -25,9 +25,9 @@ gridge(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L,
 
 \item{thin}{integer. Number of consecutive samples to skip.}
 
-\item{eb}{integer. Empirical Bayes carried out every 'eb' iteration.}
+\item{ebstep}{integer. Empirical Bayes for c carried out every 'ebstep' iteration.}
 
-\item{verbose}{logical. Whether information on progress should be be printed.}
+\item{verbose}{logical. Whether information on progress should be printed.}
 
 \item{light}{logical. If TRUE, only return a summary of the samples.}
 }
