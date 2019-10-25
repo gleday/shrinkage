@@ -18,6 +18,8 @@
 #' blablabla
 #' 
 #' @useDynLib shrinkage
+#' @import Rcpp
+#' @import GIGrvg
 #' @importFrom "stats" "density" "sd" "quantile" "rgamma" "rchisq" "rnorm"
 #' @importFrom "assertthat" "assert_that" "not_empty" "noNA"
 #' 

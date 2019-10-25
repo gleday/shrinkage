@@ -20,6 +20,8 @@
 #' blablabla
 #'
 #' @useDynLib shrinkage
+#' @import Rcpp
+#' @import GIGrvg
 #' @importFrom "stats" "density" "sd" "quantile"
 #' @importFrom "assertthat" "assert_that" "not_empty" "noNA"
 #' 
@@ -91,7 +93,7 @@ gridge <- function(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L, burnin = 10
   ###########################################
   
   # Gibbs
-  res <- .bgridge(y, X, g, idx, a, b, c, mcmc, burnin, thin, verbose, eb)
+  res <- .bgridge(y, X, g, idx, a, b, c, mcmc, burnin, thin, verbose, ebstep)
 
   # Summarize samples
   mat <- summarize(res[-5])
