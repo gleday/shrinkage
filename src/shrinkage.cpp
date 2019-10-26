@@ -317,7 +317,7 @@ Rcpp::List gridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior =
   int k = 0;
   int th = 1;
   arma::mat V;
-
+  
   //  Gibbs algorithm
   for(int i = 0; i < nruns; i++){
     for(int j = 0; j < th; j++){
@@ -493,10 +493,10 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
   //  Gibbs algorithm
   for(int i = 0; i < nruns; i++){
     for(int j = 0; j < th; j++){
-      Rcpp::Rcout << "#### i = " << i << std::endl;
+      //Rcpp::Rcout << "#### i = " << i << std::endl;
       //Rcpp::Rcout << "## j = " << j << std::endl;
       // Sample from P(\beta | ...)
-      Rcpp::Rcout << "k = " << k << std::endl;
+      //Rcpp::Rcout << "k = " << k << std::endl;
       //Rcpp::Rcout << "c = " << c << std::endl;
       //Rcpp::Rcout << "dStar = " << dStar << std::endl;
       //Rcpp::Rcout << "sigmaminus2 = " << sigmaminus2 << std::endl;

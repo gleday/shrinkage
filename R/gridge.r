@@ -47,11 +47,22 @@
 #' y <- as.vector(XB + rnorm(nrow(X), mean=0, sd=sqrt(.1)))
 #' g <- rep(c(1, 2), 50)
 #' 
-#' # Run gibbs sampler
-#' res <- gridge(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05)
+#' # Group ridge with inverse-Gamma prior
+#' set.seed(2348)
+#' res1 <- gridge(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05)
 #' 
-#' # Extract summary
-#' res$summary
+#' # Group ridge with Beta-Prime prior
+#' set.seed(7191)
+#' res2 <- gridge(y, X, g, prior = "BetaPrime", a = 0.5, b = 0.5)
+#' 
+#' # Group ridge with inverse-Gaussian prior
+#' set.seed(6320)
+#' res3 <- gridge(y, X, g, prior = "invGaussian", a = 1, b = 1e-05)
+#' 
+#' # Group ridge with Gamma prior
+#' set.seed(4230)
+#' res4 <- gridge(y, X, g, prior = "Gamma", a = 1e-05, b = 1e-05)
+#' 
 #' }
 #' 
 #' @export

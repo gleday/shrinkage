@@ -56,7 +56,7 @@ y <- as.vector(XB + rnorm(nrow(X), mean=0, sd=sqrt(.1)))
 g <- rep(c(1, 2), 50)
 
 # Run gibbs sampler
-res <- GD(y, X, g)
+res <- gd(y, X, g)
 
 # Extract summary
 res$summary
