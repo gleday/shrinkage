@@ -103,13 +103,18 @@ gridge <- function(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 500
   res <- .gridge(y, X, g, idx, a, b, mcmc, burnin, thin, verbose, ebstep)
 
   # Summarize samples
-  mat <- summarize(res[-5])
+  mat <- summarize(res[1:3])
 
+  # Labels
+  lt <- paste0("tau2_", 1:K)
+  colnames(res$tau2s) <- lt
   if(is.null(colnames(X))){
-    rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", paste0("w", 1:K), "sigma2")
+    lb <- paste0("b", 1:ncol(X))
+    colnames(res$betas) <- lb
   }else{
-    rownames(mat) <- c(colnames(X), "tau2", paste0("w", 1:K), "sigma2")
+    lb <- colnames(X)
   }
+  rownames(mat) <- c(lb, lt, "sigma2")
   
   # Output
   if(light){

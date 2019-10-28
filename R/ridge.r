@@ -135,10 +135,12 @@ ridge <- function(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L, 
     # Summarize samples
     mat <- summarize(res)
     if(is.null(colnames(X))){
-      rownames(mat) <- c(paste0("b", 1:ncol(X)), "tau2", "sigma2")
+      lb <- paste0("b", 1:ncol(X))
     }else{
-      rownames(mat) <- c(colnames(X), "tau2", "sigma2")
+      lb <- colnames(X)
     }
+    colnames(res$betas) <- lb
+    rownames(mat) <- c(lb, "tau2", "sigma2")
     
     # Output
     if(light){
