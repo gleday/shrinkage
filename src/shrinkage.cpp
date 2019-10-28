@@ -484,7 +484,7 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
   arma::mat betavar, cholvar;
   arma::colvec betamean, resid;
   arma::colvec beta(p);
-  double btDb, bktDbk, dStar;
+  double btDb, bktbk, dStar;
   uvec indk;
   int k = 0;
   int th = 1;
@@ -522,8 +522,8 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
         // Sample from P(\omega_k | ...)
         for(int u = 0; u < K; u++){
           indk = find(g == gr(u));
-          bktDbk = sum(square(beta(indk)));
-          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*b);
+          bktbk = sum(square(beta(indk)));
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktbk, 2*b);
         }
         wk /= sum(wk);
         
@@ -538,8 +538,8 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
         // Sample from P(\omega_k | ...)
         for(int u = 0; u < K; u++){
           indk = find(g == gr(u));
-          bktDbk = sum(square(beta(indk)));
-          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktDbk, 2*gamma2);
+          bktbk = sum(square(beta(indk)));
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktbk, 2*gamma2);
         }
         wk /= sum(wk);
         
