@@ -458,9 +458,13 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
     pk(u) += sum(g == gr(u));
   }
   
+  // Group factor
+  arma::colvec fk = ones(gr.n_elem);
+  
   // Initialisation
   const double cStar = 0.5*(n+p);
   double ustar = a - 0.5*p;
+  const double xstar = 2*b;
   double tauminus2 = 1;
   double sigmaminus2 = 1;
   double gamma2 = 1;
@@ -468,7 +472,7 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
   arma::colvec wk = ones(K)*1/K;
   arma::colvec d = zeros(p);
   for(int u = 0; u < K; u++){
-    d(find(g == gr(u))).fill(pk(u)/wk(u));
+    d(find(g == gr(u))).fill(fk(u)/wk(u));
   }
   arma::mat D = diagmat(d);
   
@@ -489,7 +493,7 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
   int k = 0;
   int th = 1;
   arma::mat V;
-  
+  Rcpp::Rcout << "prior = " << prior << std::endl;
   //  Gibbs algorithm
   for(int i = 0; i < nruns; i++){
     for(int j = 0; j < th; j++){
@@ -501,8 +505,8 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
       //Rcpp::Rcout << "dStar = " << dStar << std::endl;
       //Rcpp::Rcout << "sigmaminus2 = " << sigmaminus2 << std::endl;
       //Rcpp::Rcout << "tauminus2 = " << tauminus2 << std::endl;
-      //Rcpp::Rcout << "d.min() = " << d.min() << std::endl;
-      //Rcpp::Rcout << "d.max() = " << d.max() << std::endl;
+      Rcpp::Rcout << "d.min() = " << d.min() << std::endl;
+      Rcpp::Rcout << "d.max() = " << d.max() << std::endl;
       //Rcpp::Rcout << "wk = " << wk << std::endl;
       
       V = sigmaminus2*(XTX + tauminus2*D);
@@ -517,13 +521,13 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
       if(prior == 1){
         
         // Sample from P(\tau^2 | ...)
-        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, 2*b);
+        tauminus2 = 1/rgig(ustar, sigmaminus2*btDb, xstar);
         
         // Sample from P(\omega_k | ...)
         for(int u = 0; u < K; u++){
           indk = find(g == gr(u));
           bktbk = sum(square(beta(indk)));
-          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktbk, 2*b);
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*fk(u)*bktbk, xstar);
         }
         wk /= sum(wk);
         
@@ -539,7 +543,7 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
         for(int u = 0; u < K; u++){
           indk = find(g == gr(u));
           bktbk = sum(square(beta(indk)));
-          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*pk(u)*bktbk, 2*gamma2);
+          wk(u) = rgig(c - 0.5 * pk(u), sigmaminus2*fk(u)*bktbk, 2*gamma2);
         }
         wk /= sum(wk);
         
@@ -547,7 +551,7 @@ Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior = 1, 
       
       // Sample from P(\sigma^2| ...)
       for(int u = 0; u < K; u++){
-        d(find(g == gr(u))).fill(pk(u)/wk(u));
+        d(find(g == gr(u))).fill(fk(u)/wk(u));
       }
       if(d.max() > std::numeric_limits<float>::max()){
         d(find(d > std::numeric_limits<float>::max())).fill(std::numeric_limits<float>::max());
