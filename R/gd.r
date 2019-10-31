@@ -47,7 +47,7 @@
 #' g <- rep(c(1, 2), 50)
 #' 
 #' # Run gibbs sampler
-#' res <- gd(y, X, g)
+#' res <- gd(y, X, g, prior = "Gamma", c=1)
 #' 
 #' # Extract summary
 #' res$summary
