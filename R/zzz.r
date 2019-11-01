@@ -36,6 +36,14 @@
   assert_that(noNA(prior))
 }
 
+.checkPriors <- function(){
+  priors <- get("priors", envir=parent.frame())
+  assert_that(is.character(priors))
+  assert_that(not_empty(priors))
+  assert_that(length(priors)==2)
+  assert_that(noNA(priors))
+}
+
 .checka <- function(){
   a <- get("a", envir=parent.frame())
   assert_that(is.vector(a))

@@ -58,6 +58,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sgridge
+Rcpp::List sgridge(arma::colvec y, arma::mat X, arma::colvec g, arma::colvec priors, double a, double b, double c, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
+RcppExport SEXP _shrinkage_sgridge(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorsSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type g(gSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type priors(priorsSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type c(cSEXP);
+    Rcpp::traits::input_parameter< const int >::type mcmc(mcmcSEXP);
+    Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
+    Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< const int >::type step(stepSEXP);
+    rcpp_result_gen = Rcpp::wrap(sgridge(y, X, g, priors, a, b, c, mcmc, burnin, thin, verbose, step));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gd
 Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior, double a, double b, double c, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
 RcppExport SEXP _shrinkage_gd(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
@@ -85,6 +107,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_shrinkage_ridge", (DL_FUNC) &_shrinkage_ridge, 9},
     {"_shrinkage_ridge_fixed", (DL_FUNC) &_shrinkage_ridge_fixed, 2},
     {"_shrinkage_gridge", (DL_FUNC) &_shrinkage_gridge, 11},
+    {"_shrinkage_sgridge", (DL_FUNC) &_shrinkage_sgridge, 12},
     {"_shrinkage_gd", (DL_FUNC) &_shrinkage_gd, 12},
     {NULL, NULL, 0}
 };
