@@ -53,10 +53,6 @@ double logML(const double tauminus2, const int p, const int n, const double yTy,
 //-------------- External functions --------------//
 ////////////////////////////////////////////////////
 
-// Future extension for Bayesian ridge:
-// - implement empirical Bayes ML-based estimation of \tau^2.
-// ( -> add argument prior = c("bp", "ig", "ml")?)
-
 // [[Rcpp::export(.ridge)]]
 Rcpp::List ridge(arma::colvec y, arma::mat X, const int prior, const double a = 0.5, const double b = 0.5, const int mcmc = 1000, const int  burnin = 1000, const int thin = 10, bool verbose = true){
 
