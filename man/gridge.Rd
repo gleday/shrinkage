@@ -4,9 +4,20 @@
 \alias{gridge}
 \title{Bayesian group ridge regression}
 \usage{
-gridge(y, X, g, prior = "invGamma", a = 1e-05, b = 1e-05,
-  mcmc = 5000L, burnin = 1000L, thin = 10L, ebstep = 1000L,
-  verbose = TRUE, light = FALSE)
+gridge(
+  y,
+  X,
+  g,
+  prior = "invGamma",
+  a = 1e-05,
+  b = 1e-05,
+  mcmc = 5000L,
+  burnin = 1000L,
+  thin = 10L,
+  ebstep = 1000L,
+  verbose = TRUE,
+  light = FALSE
+)
 }
 \arguments{
 \item{y}{response vector of length n.}

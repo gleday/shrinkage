@@ -4,8 +4,18 @@
 \alias{ridge}
 \title{Bayesian ridge regression}
 \usage{
-ridge(y, X, prior = "invGamma", a = 1e-05, b = 1e-05, mcmc = 5000L,
-  burnin = 5000L, thin = 10L, verbose = TRUE, light = FALSE)
+ridge(
+  y,
+  X,
+  prior = "invGamma",
+  a = 1e-05,
+  b = 1e-05,
+  mcmc = 5000L,
+  burnin = 5000L,
+  thin = 10L,
+  verbose = TRUE,
+  light = FALSE
+)
 }
 \arguments{
 \item{y}{response vector of length n.}
@@ -47,7 +57,7 @@ X <- matrix(rnorm(n*p), n, p)
 trueBeta <- rnorm(p, 0, 1)
 y <- as.vector(X\%*\%trueBeta + rnorm(n, sd=1))
 
-# Ridge with fixed \\tau^2
+# Ridge with fixed \tau^2
 set.seed(7216)
 res0 <- ridge(y, X, prior = "ml")
 
@@ -67,7 +77,7 @@ res3 <- ridge(y, X, prior = "invGaussian", a = 1, b = 1e-05)
 set.seed(6570)
 res4 <- ridge(y, X, prior = "Gamma", a = 1e-05, b = 1e-05)
 
-# Plot posterior densities of \\tau^2
+# Plot posterior densities of \tau^2
 xs <- sapply(paste0("res", 1:4), function(x){get(x)$tau2s}, simplify=FALSE)
 dens <- lapply(xs, density)
 plot(NA, ylim=c(0, .5), xlim=c(0, 15), ylab="Density", xlab=expression(tau^2))

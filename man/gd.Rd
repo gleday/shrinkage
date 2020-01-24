@@ -4,9 +4,19 @@
 \alias{gd}
 \title{Bayesian regression using the Gamma-Dirichlet prior}
 \usage{
-gd(y, X, g, prior = "Gamma", c = NULL, mcmc = 5000L,
-  burnin = 1000L, thin = 10L, ebstep = 1000L, verbose = TRUE,
-  light = FALSE)
+gd(
+  y,
+  X,
+  g,
+  prior = "Gamma",
+  c = NULL,
+  mcmc = 5000L,
+  burnin = 1000L,
+  thin = 10L,
+  ebstep = 1000L,
+  verbose = TRUE,
+  light = FALSE
+)
 }
 \arguments{
 \item{y}{response vector of length n.}

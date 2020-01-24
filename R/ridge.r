@@ -63,7 +63,7 @@
 #' # Plot posterior densities of \tau^2
 #' xs <- sapply(paste0("res", 1:4), function(x){get(x)$tau2s}, simplify=FALSE)
 #' dens <- lapply(xs, density)
-#' plot(NA, ylim=c(0, .5), xlim=c(0, 15), ylab="Density", xlab=expression(tau^2))
+#' plot(NA, ylim=c(0, .5), xlim=c(0, 15), ylab="Posterior density", xlab=expression(tau^2))
 #' #plot(NA, xlim=range(sapply(dens, "[", "x")), ylim=range(sapply(dens, "[", "y")))
 #' mapply(lines, dens, col=1:length(dens), lwd=2)
 #' labs <- c("invGamma", "BetaPrime", "invGaussian", "Gamma")
