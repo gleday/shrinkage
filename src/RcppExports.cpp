@@ -6,9 +6,14 @@
 
 using namespace Rcpp;
 
-// ridge
-Rcpp::List ridge(arma::colvec y, arma::mat X, const int prior, const double a, const double b, const int mcmc, const int burnin, const int thin, bool verbose);
-RcppExport SEXP _shrinkage_ridge(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP) {
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
+// brg_gibbs
+Rcpp::List brg_gibbs(arma::colvec y, arma::mat X, const int prior, const double a, const double b, const int mcmc, const int burnin, const int thin, bool verbose, const int bp);
+RcppExport SEXP _shrinkage_brg_gibbs(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP bpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,25 +26,26 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
     Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(ridge(y, X, prior, a, b, mcmc, burnin, thin, verbose));
+    Rcpp::traits::input_parameter< const int >::type bp(bpSEXP);
+    rcpp_result_gen = Rcpp::wrap(brg_gibbs(y, X, prior, a, b, mcmc, burnin, thin, verbose, bp));
     return rcpp_result_gen;
 END_RCPP
 }
-// ridge_fixed
-Rcpp::List ridge_fixed(arma::colvec y, arma::mat X);
-RcppExport SEXP _shrinkage_ridge_fixed(SEXP ySEXP, SEXP XSEXP) {
+// brg_closedform
+Rcpp::List brg_closedform(arma::colvec y, arma::mat X);
+RcppExport SEXP _shrinkage_brg_closedform(SEXP ySEXP, SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
-    rcpp_result_gen = Rcpp::wrap(ridge_fixed(y, X));
+    rcpp_result_gen = Rcpp::wrap(brg_closedform(y, X));
     return rcpp_result_gen;
 END_RCPP
 }
-// gridge
-Rcpp::List gridge(arma::colvec y, arma::mat X, arma::colvec g, const int prior, double a, double b, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
-RcppExport SEXP _shrinkage_gridge(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
+// brl_gibbs
+Rcpp::List brl_gibbs(arma::colvec y, arma::mat X, arma::colvec g, const int prior, double a, double b, const int mcmc, const int burnin, const int thin, bool verbose, const int bp);
+RcppExport SEXP _shrinkage_brl_gibbs(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP bpSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,39 +59,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
     Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< const int >::type step(stepSEXP);
-    rcpp_result_gen = Rcpp::wrap(gridge(y, X, g, prior, a, b, mcmc, burnin, thin, verbose, step));
-    return rcpp_result_gen;
-END_RCPP
-}
-// gd
-Rcpp::List gd(arma::colvec y, arma::mat X, arma::colvec g, const int prior, double a, double b, double c, const int mcmc, const int burnin, const int thin, bool verbose, const int step);
-RcppExport SEXP _shrinkage_gd(SEXP ySEXP, SEXP XSEXP, SEXP gSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP stepSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::colvec >::type g(gSEXP);
-    Rcpp::traits::input_parameter< const int >::type prior(priorSEXP);
-    Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< double >::type b(bSEXP);
-    Rcpp::traits::input_parameter< double >::type c(cSEXP);
-    Rcpp::traits::input_parameter< const int >::type mcmc(mcmcSEXP);
-    Rcpp::traits::input_parameter< const int >::type burnin(burninSEXP);
-    Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< const int >::type step(stepSEXP);
-    rcpp_result_gen = Rcpp::wrap(gd(y, X, g, prior, a, b, c, mcmc, burnin, thin, verbose, step));
+    Rcpp::traits::input_parameter< const int >::type bp(bpSEXP);
+    rcpp_result_gen = Rcpp::wrap(brl_gibbs(y, X, g, prior, a, b, mcmc, burnin, thin, verbose, bp));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_shrinkage_ridge", (DL_FUNC) &_shrinkage_ridge, 9},
-    {"_shrinkage_ridge_fixed", (DL_FUNC) &_shrinkage_ridge_fixed, 2},
-    {"_shrinkage_gridge", (DL_FUNC) &_shrinkage_gridge, 11},
-    {"_shrinkage_gd", (DL_FUNC) &_shrinkage_gd, 12},
+    {"_shrinkage_brg_gibbs", (DL_FUNC) &_shrinkage_brg_gibbs, 10},
+    {"_shrinkage_brg_closedform", (DL_FUNC) &_shrinkage_brg_closedform, 2},
+    {"_shrinkage_brl_gibbs", (DL_FUNC) &_shrinkage_brl_gibbs, 11},
     {NULL, NULL, 0}
 };
 

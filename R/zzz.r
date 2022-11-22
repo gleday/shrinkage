@@ -110,12 +110,54 @@
   assert_that(thin>=0)
 }
 
-.sampleBetas <- function(nsamp, result){
-  xx <- matrix(rnorm(nsamp * length(as.numeric(result$thetabar))), nrow = nsamp, byrow = TRUE)
-  diagmat <- diag(sqrt((2*result$sigma2scale/result$n)*as.numeric(result$vartheta)))
-  xx <- tcrossprod(xx, diagmat)
-  xx <- sweep(xx, 2, result$thetabar, "+")
-  xx <- tcrossprod(xx, result$v)
-  betas <- xx / sqrt(rchisq(nsamp, result$n)/result$n)
-  betas
+.checkoutput <- function(){
+  output <- get("output", envir=parent.frame())
+  assert_that(is.character(output))
+  assert_that(not_empty(output))
+  assert_that(length(output)==1)
+  assert_that(noNA(output))
 }
+
+.checkBP <- function(){
+  output <- get("BP", envir=parent.frame())
+  assert_that(is.character(output))
+  assert_that(not_empty(output))
+  assert_that(length(output)==1)
+  assert_that(noNA(output))
+}
+
+.sample_thetas <- function(nsamp, result){
+  thetas <- mapply(.generate_t, mean = result$thetabar, scale = result$vartheta, df = result$n, ns = nsamp)
+  thetas
+}
+
+.sample_betas <- function(nsamp, result){
+  thetas <- .sample_thetas(nsamp, result)
+  tcrossprod(result$v, thetas)
+}
+
+.sixnum_t <- function(mean, scale, df){
+  m <- mean
+  s <- sqrt(scale)
+  qs <- m + s * qt(c(0.025, 0.5, 0.975), df = df)
+  out <- c(m, s, qs, m)
+  names(out) <- c("Mean", "Sd", "Q_0.025", "Median", "Q_0.975", "Mode")
+  out
+}
+
+.sixnum_InvGamma <- function(shape, scale){
+  m <- scale/(shape - 1)
+  s <- sqrt((scale^2)/(((shape - 1)^2)*(shape - 2)))
+  qs <- 1/qgamma(c(1 - 0.025, 0.5, 1 - 0.975), shape = shape, rate = scale)
+  m2 <- scale/(shape + 1)
+  out <- c(m, s, qs, m2)
+  names(out) <- c("Mean", "Sd", "Q_0.025", "Median", "Q_0.975", "Mode")
+  out
+}
+
+.generate_t <- function(mean, scale, df, ns){
+  m <- mean
+  s <- sqrt(scale)
+  m + s * rt(ns, df = df)
+}
+

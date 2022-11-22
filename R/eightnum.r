@@ -1,6 +1,6 @@
 #' eight-number summary
 #'
-#' @param x vector of samples
+#' @param x numeric vector of samples
 #'
 #' @description 
 #' This function computes an eight-number summary for a sample

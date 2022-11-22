@@ -7,7 +7,7 @@
 eightnum(x)
 }
 \arguments{
-\item{x}{vector of samples}
+\item{x}{numeric vector of samples}
 }
 \value{
 A numeric vector

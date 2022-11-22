@@ -1,0 +1,350 @@
+---
+title: "Stan code for models in the R package `shrinkage`"
+author: "Gwenaël GR Leday"
+date: "16-11-2022"
+output: rmarkdown::html_vignette
+header-includes:
+- \renewcommand{\textfraction}{0}
+bibliography: refs.bib
+biblio-style: "apalike"
+link-citations: true
+vignette: >
+  %\VignetteIndexEntry{Stan}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, collapse = TRUE, comment = "#>")
+```
+
+<!----------------------------------------------------------------------------->
+<!--------------------------------- GLOBAL SHRINKAGE -------------------------->
+<!----------------------------------------------------------------------------->
+## Regression models with global shrinkage priors
+
+### Gaussian model
+
+The following provides stan code for fitting linear regression models with
+various global shrinkage priors.
+
+```{r eval=FALSE}
+# stan code for global shrinkage with inverse-Gamma prior
+code_brg_invGamma <- "
+  data { 
+    int<lower=0> p;
+    int<lower=0> n;
+    matrix[n,p] X;
+    real y[n];
+    real<lower=0> a;
+    real<lower=0> b;
+  }
+  parameters {
+    vector[p] beta;
+    real<lower=0> sigma2;
+    real<lower=0> tau2;
+  }
+  model {
+      tau2 ~ inv_gamma(a, b);
+      for(i in 1:p){
+        beta[i] ~ normal(0, sqrt(sigma2*tau2));
+      }
+      y ~ normal(X*beta, sqrt(sigma2));
+      target += -log(sigma2);
+  }
+"
+
+# stan code for global shrinkage with beta-prime prior
+code_brg_BetaPrime <- "
+  data { 
+    int<lower=0> p;
+    int<lower=0> n;
+    matrix[n,p] X;
+    real y[n];
+    real<lower=0> a;
+    real<lower=0> b;
+  }
+  parameters {
+    vector[p] beta;
+    real<lower=0> sigma2;
+    real<lower=0> gam2;
+    real<lower=0> tau2;
+  }
+  model {
+      gam2 ~ inv_gamma(a, 1);
+      tau2 ~ inv_gamma(b, 1/gam2);
+      for(i in 1:p){
+        beta[i] ~ normal(0, sqrt(sigma2*tau2));
+      }
+      y ~ normal(X*beta, sqrt(sigma2));
+      target += -log(sigma2);
+  }
+"
+
+# stan code for global shrinkage with inverse-Gaussian prior
+code_brg_invGaussian <- "
+  data { 
+    int<lower=0> p;
+    int<lower=0> n;
+    matrix[n,p] X;
+    real y[n];
+    real<lower=0> a;
+    real<lower=0> b;
+  }
+  functions {
+    // inverse Gaussian log probability density function
+    real igauss_lpdf(real x, real phi, real lambda) {
+      return -log(2*pi())/2 + log(lambda)/2 - 3*log(x)/2
+             - lambda*square(x - phi)/(2*square(phi)*x);
+    }
+  }
+  parameters {
+    vector[p] beta;
+    real<lower=0> sigma2;
+    real<lower=0> tau2;
+  }
+  model {
+      tau2 ~ igauss(a, b);
+      for(i in 1:p){
+        beta[i] ~ normal(0, sqrt(sigma2*tau2));
+      }
+      y ~ normal(X*beta, sqrt(sigma2));
+      target += -log(sigma2);
+  }
+"
+
+# stan code for global shrinkage with Gamma prior
+code_brg_Gamma <- "
+  data { 
+    int<lower=0> p;
+    int<lower=0> n;
+    matrix[n,p] X;
+    real y[n];
+    real<lower=0> a;
+    real<lower=0> b;
+  }
+  parameters {
+    vector[p] beta;
+    real<lower=0> sigma2;
+    real<lower=0> tau2;
+  }
+  model {
+      tau2 ~ gamma(a, b);
+      for(i in 1:p){
+        beta[i] ~ normal(0, sqrt(sigma2*tau2));
+      }
+      y ~ normal(X*beta, sqrt(sigma2));
+      target += -log(sigma2);
+  }
+"
+```
+
+Any of the above stan codes can be compiled using the R package
+[rstan](https://cran.r-project.org/web/packages/rstan) and
+then used to fit a regression model with global shrinkage priors.
+For example:
+```{r eval=FALSE}
+# library
+library(rstan)
+
+# compile stan code 
+stan_brg_BetaPrime <- stan_model(model_name = "stan_brg_BetaPrime",
+                                 model_code = code_brg_BetaPrime)
+
+# list of input data for rstan
+dat <- list(y = y, X = X, n = nrow(X), p = ncol(X), a = 0.5, b = 0.5)
+
+# sample from posterior
+fit_rstan <- sampling(stan_brg_BetaPrime, data = dat, iter = 55000,
+                      warmup = 5000, thin = 10, verbose = FALSE, chains = 1)
+
+# posterior samples for sigma^2
+extract(fit_rstan, "sigma2")$sigma2
+
+# posterior samples for tau^2
+extract(fit_rstan, "tau2")$tau2
+
+# posterior samples for betas
+extract(fit_rstan, "beta")$beta
+```
+
+### Logistic model
+
+Here is an example of stan code to fit a logistic model with a beta prime
+prior for global shrinkage.
+
+```{r eval=FALSE}
+# logistic regression with beta-prime global shrinkage prior
+code_bin_brg_BetaPrime <- "
+  data { 
+    int<lower=0> p;
+    int<lower=0> n;
+    matrix[n,p] X;
+    int<lower=0, upper=1> y[n];
+    real<lower=0> a;
+    real<lower=0> b;
+  }
+  parameters {
+    vector[p] beta;
+    real<lower=0> gam2;
+    real<lower=0> tau2;
+  }
+  model {
+      gam2 ~ inv_gamma(a, 1);
+      tau2 ~ inv_gamma(b, 1/gam2);
+      for(i in 1:p){
+        beta[i] ~ normal(0, sqrt(tau2));
+      }
+      y ~ bernoulli_logit(X*beta);
+  }
+"
+```
+To fit the logistic model with global shrinkage priors the following can be used: 
+```{r eval=FALSE}
+# library
+library(rstan)
+
+# compile stan code 
+stan_bin_brg_BetaPrime  <- stan_model(model_name = "stan_bin_brg_BetaPrime",
+                                     model_code = code_bin_brg_BetaPrime))
+
+# list of input data for rstan
+dat <- list(y = y, X = X, n = nrow(X), p = ncol(X), a = 0.5, b = 0.5)
+
+# sample from posterior
+fit_rstan <- sampling(stan_bin_brg_BetaPrime , data = dat, iter = 55000,
+                      warmup = 5000, thin = 10, verbose = FALSE, chains = 1)
+
+# posterior samples for tau^2
+extract(fit_rstan, "tau2")$tau2
+
+# posterior samples for betas
+extract(fit_rstan, "beta")$beta
+```
+
+<!----------------------------------------------------------------------------->
+<!--------------------------------- LOCAL SHRINKAGE --------------------------->
+<!----------------------------------------------------------------------------->
+## Regression models with local shrinkage priors
+
+### Gaussian models
+
+```{r eval=FALSE}
+# stan code local shrinkage with beta-prime prior
+code_brl_BetaPrime <- "
+  data { 
+    int<lower=0> p;
+    int<lower=0> n;
+    matrix[n,p] X;
+    real y[n];
+    real<lower=0> a;
+    real<lower=0> b;
+    int g[p];
+    int<lower=0> K;
+  }
+  parameters {
+    vector[p] beta;
+    real<lower=0> sigma2;
+    real<lower=0>  gam2[K];
+    real<lower=0>  tau2[K];
+  }
+  model {
+      for (k in 1:K) {
+        gam2[k] ~ inv_gamma(a, 1);
+        tau2[k] ~ inv_gamma(b, 1/gam2[k]);
+      }
+      for (i in 1:p) {
+        beta[i] ~ normal(0, sqrt(sigma2*tau2[g[i]]));
+      }
+      y ~ normal(X*beta, sqrt(sigma2));
+      target += -log(sigma2);
+  }
+"
+```
+Again the above stan codes can be compiled using the R package \code{rstan}.
+For example:
+```{r eval=FALSE}
+# library
+library(rstan)
+
+# compile stan code 
+stan_brl_BetaPrime  <- stan_model(model_name = "stan_brl_BetaPrime",
+                                     model_code = code_brl_BetaPrime)))
+
+# list of input data for rstan
+dat <- list(y = y, X = X, g = 1:ncol(X), n = nrow(X), p = ncol(X),
+            K = ncol(X), a = 0.5, b = 0.5)
+
+# sample from posterior
+fit_rstan <- sampling(stan_brl_BetaPrime , data = dat, iter = 55000,
+                      warmup = 5000, thin = 10, verbose = FALSE, chains = 1)
+
+# posterior samples for sigma^2
+extract(fit_rstan, "sigma2")$sigma2
+
+# posterior samples for tau^2
+extract(fit_rstan, "tau2")$tau2
+
+# posterior samples for betas
+extract(fit_rstan, "beta")$beta
+```
+
+
+### Logistic model
+
+Here is an example of stan code to fit a logistic model with beta prime
+local shrinkage priors.
+
+```{r eval=FALSE}
+# stan code local shrinkage with beta-prime prior
+code_bin_brl_BetaPrime <- "
+  data { 
+    int<lower=0> p;
+    int<lower=0> n;
+    matrix[n,p] X;
+    int<lower=0, upper=1> y[n];
+    real<lower=0> a;
+    real<lower=0> b;
+    int g[p];
+    int<lower=0> K;
+  }
+  parameters {
+    vector[p] beta;
+    real<lower=0>  gam2[K];
+    real<lower=0>  tau2[K];
+  }
+  model {
+      for (k in 1:K) {
+        gam2[k] ~ inv_gamma(a, 1);
+        tau2[k] ~ inv_gamma(b, gam2[k]);
+      }
+      for (i in 1:p) {
+        beta[i] ~ normal(0, sqrt(tau2[g[i]]));
+      }
+      y ~ bernoulli_logit(X*beta);
+  }
+"
+```
+To fit a logistic model with local shrinkage priors use: 
+```{r eval=FALSE}
+# library
+library(rstan)
+
+# compile stan code 
+stan_bin_brl_BetaPrime  <- stan_model(model_name = "stan_bin_brl_BetaPrime",
+                                     model_code = code_bin_brl_BetaPrime))
+
+# list of input data for rstan
+dat <- list(y = y, X = X, g = 1:ncol(X), n = nrow(X), p = ncol(X),
+            K = ncol(X), a = 0.5, b = 0.5)
+
+# sample from posterior
+fit_rstan <- sampling(stan_bin_brl_BetaPrime , data = dat, iter = 55000,
+                      warmup = 5000, thin = 10, verbose = FALSE, chains = 1)
+
+# posterior samples for tau^2
+extract(fit_rstan, "tau2")$tau2
+
+# posterior samples for betas
+extract(fit_rstan, "beta")$beta
+```
