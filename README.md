@@ -2,7 +2,11 @@
 An R package to fit Bayesian regression models with shrinkage priors.
 
 Linear regression models with global shrinkage priors:
-* Gaussian prior with global variance endowed with [inverse-gamma](https://en.wikipedia.org/wiki/Inverse-gamma_distribution), [gamma](https://en.wikipedia.org/wiki/Gamma_distribution), [beta prime](https://en.wikipedia.org/wiki/Beta_prime_distribution) or [inverse-Gaussian](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution) or estimated using an [empirical Bayes method](https://en.wikipedia.org/wiki/Empirical_Bayes_method)
+* normal-[inverse-Gamma](https://en.wikipedia.org/wiki/Inverse-gamma_distribution)
+* normal-[beta prime](https://en.wikipedia.org/wiki/Beta_prime_distribution)
+* normal-[inverse-Gaussian](https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution)
+* normal-[Gamma](https://en.wikipedia.org/wiki/Gamma_distribution)
+* normal with [empirical Bayes](https://en.wikipedia.org/wiki/Empirical_Bayes_method) (closed-form inference)
 
 Linear regression models with local shrinkage priors:
 * normal-Gamma ([Griffin and Brown, 2010](https://projecteuclid.org/euclid.ba/1340369797))
