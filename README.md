@@ -28,3 +28,14 @@ install_github("gleday/shrinkage")
 library(shrinkage)
 ```
 
+## Vignettes
+
+Vignette describing in details the implemented algorithms:
+```R
+vignette("Algorithms", package = "shrinkage")
+```
+Vignette providing code for fitting models using [Stan](https://mc-stan.org)
+via the R package [rstan](https://cran.r-project.org/package=rstan):
+```R
+vignette("Stan", package = "shrinkage")
+```
