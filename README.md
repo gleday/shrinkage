@@ -8,11 +8,11 @@ Linear regression models with global shrinkage priors:
 * normal-[Gamma](https://en.wikipedia.org/wiki/Gamma_distribution)
 * normal with [empirical Bayes](https://en.wikipedia.org/wiki/Empirical_Bayes_method) (closed-form inference)
 
-Linear regression models with local shrinkage priors:
+Linear regression models with local shrinkage priors, which accommodate grouped variables and some sparse-inducing priors:
+* normal-inverse-Gamma ([Armagan and Zaretzki, 2010](https://link.springer.com/article/10.1007/s00180-010-0186-4))
 * normal-Gamma ([Griffin and Brown, 2010](https://projecteuclid.org/euclid.ba/1340369797))
 * normal-inverse-Gaussian ([Caron and Doucet, 2008](http://doi.acm.org/10.1145/1390156.1390168)) 
 * normal-Beta-Prime ([Bai and Gosh, 2019](http://www3.stat.sinica.edu.tw/ss_newpaper/SS-2019-0037_na.pdf))
-* accommodate shrinkage for grouped variables
 
 ## Installation
 
