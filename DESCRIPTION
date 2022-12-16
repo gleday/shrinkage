@@ -9,9 +9,9 @@ Maintainer: Gwenael G.R. Leday <gwenael.leday@wur.nl>
 Depends: R (>= 3.1.0)
 Description: This packages implements Bayesian linear regression models with global and/or local shrinkage priors.
 License: GPL-3
-Imports: Rcpp (>= 1.0.1), GIGrvg, assertthat, purrr
+Imports: Rcpp (>= 1.0.1), GIGrvg, assertthat, purrr, matrixStats
 LinkingTo: Rcpp, RcppArmadillo, GIGrvg, BH
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.2
 Encoding: UTF-8
 Suggests: knitr
 VignetteBuilder: knitr
