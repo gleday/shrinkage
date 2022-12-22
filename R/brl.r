@@ -11,7 +11,7 @@
 #' @param thin integer. Number of consecutive samples to skip.
 #' @param verbose logical. Whether information on progress should be printed.
 #' @param output character. Either "samples", "summary" or both.
-#' @param BP character. Parametrization used when \code{prior = "BetaPrime"}. Either "GG" or "IGIG" (default).
+#' @param BP character. Parametrization of Beta Prime prior. Either "GG" (default) or "IGIG".
 #'
 #' @description 
 #' This function implements inference methods for the Bayesian regression model with local shrinkage priors.
@@ -85,7 +85,7 @@
 #' @export
 brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
                 mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE,
-                output = "both", BP = "IGIG"){
+                output = "both", BP = "GG"){
   
   #-----------------------------------------#
   #             PRE-PROCESSING              #

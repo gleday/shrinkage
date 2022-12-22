@@ -49,8 +49,9 @@ waic <- function(object, y, X){
   # log-pointwise predictive density
   lppd <- sum(log(rowMeans2(exp(ll))))
   
-  # effect number of parameters
+  # effect number of parameters (pWAIC2 in Gelman et al., 2014)
   p_waic <- sum(rowVars(ll))
+  # effect number of parameters (pWAIC1 in Gelman et al., 2014)
   #p_waic <- 2 * sum(log(rowMeans2(exp(ll))) - rowMeans2(ll))
   
   # expected log-pointwise predictive density

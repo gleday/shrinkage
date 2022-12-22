@@ -15,7 +15,7 @@ brg(
   thin = 10L,
   verbose = TRUE,
   output = "both",
-  BP = "IGIG"
+  BP = "GG"
 )
 }
 \arguments{
@@ -39,7 +39,7 @@ brg(
 
 \item{output}{character. Either "samples", "summary" or "both".}
 
-\item{BP}{character. Parametrization used when \code{prior = "BetaPrime"}. Either "GG" or "IGIG" (default).}
+\item{BP}{character. Parametrization of Beta Prime prior. Either "GG" (default) or "IGIG".}
 }
 \value{
 An object of class \code{\link{list}}

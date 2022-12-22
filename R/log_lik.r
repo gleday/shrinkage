@@ -46,7 +46,7 @@ log_lik <- function(object, y, X, output = "both"){
     
     # obtain samples from the log-likelihood
     linpreds <- array_branch(linpreds, 2)
-    out$samples <- map2(linpreds, object$sigma2s, dnorm, x = y, log = TRUE)
+    out$samples <- map2(linpreds, sqrt(object$sigma2s), dnorm, x = y, log = TRUE)
     out$samples <- Reduce("cbind", out$samples)
     rownames(out$samples) <- colnames(out$samples) <- NULL
     

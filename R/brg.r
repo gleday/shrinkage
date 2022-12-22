@@ -10,12 +10,11 @@
 #' @param thin integer. Number of consecutive samples to skip.
 #' @param verbose logical. Whether information on progress should be printed.
 #' @param output character. Either "samples", "summary" or "both".
-#' @param BP character. Parametrization used when \code{prior = "BetaPrime"}. Either "GG" or "IGIG" (default).
+#' @param BP character. Parametrization of Beta Prime prior. Either "GG" (default) or "IGIG".
 #'
 #' @description 
 #' This function implements inference methods for the linear regression model with various global shrinkage priors.
 #' 
-#'
 #' @details
 #' This function fits the following model:
 #' 
@@ -96,7 +95,7 @@
 #' @export
 brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
                 burnin = 5000L, thin = 10L, verbose = TRUE,
-                output = "both", BP = "IGIG"){
+                output = "both", BP = "GG"){
   
   #-----------------------------------------#
   #              PREPROCESSING              #
