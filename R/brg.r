@@ -101,31 +101,19 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
   #              PREPROCESSING              #
   #-----------------------------------------#
   
-  # check input argument y and X
+  # check input arguments
   .checky()
   .checkX()
-  
-  # check input argument prior
+  pr_lab <- c("invGamma", "BetaPrime", "invGaussian", "Gamma", "ml")
   .checkPrior()
-  pr <- c("invGamma", "BetaPrime", "invGaussian", "Gamma")
-  assert_that(prior%in%c(pr, "ml"), msg="'prior' is not recognized")
-  idx <- which(pr == prior)
-  
-  # check input arguments a and b
   .checka()
   .checkb()
-
-  # check input arguments mcmc, burnin and thin
   .checkmcmc()
   .checkburnin()
   .checkthin()
-  
-  # check input arguments output
   .checkoutput()
+  bp_lab <- c("GG", "IGIG")
   .checkBP()
-  bp <- c("GG", "IGIG")
-  assert_that(BP%in%bp, msg="'BP' is not recognized")
-  idx2 <- which(BP == bp)
   
   #-----------------------------------------#
   #                ALGORITHM                #
@@ -220,8 +208,12 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
       cat("Inference using MCMC algorithm\n")
     }
     
-    # MCMC
-    res <- .brg_gibbs(y, X, idx, a, b, mcmc, burnin, thin, verbose, idx2)
+    # prior index/id
+    prior_id <- which(pr_lab == prior)
+    bp_id <- which(bp_lab == BP)
+    
+    # gibbs sampler
+    res <- .brg_gibbs(y, X, prior_id, a, b, mcmc, burnin, thin, verbose, bp_id)
     tp2 <- proc.time() - tp1
     
     # convert to vector

@@ -32,8 +32,10 @@
   prior <- get("prior", envir=parent.frame())
   assert_that(is.character(prior))
   assert_that(not_empty(prior))
-  assert_that(length(prior)==1)
+  assert_that(length(prior) == 1)
   assert_that(noNA(prior))
+  pr_lab <- get("pr_lab", envir=parent.frame())
+  assert_that(prior %in% pr_lab, msg="'prior' is not recognized")
 }
 
 .checkPriors <- function(){
@@ -119,11 +121,13 @@
 }
 
 .checkBP <- function(){
-  output <- get("BP", envir=parent.frame())
-  assert_that(is.character(output))
-  assert_that(not_empty(output))
-  assert_that(length(output)==1)
-  assert_that(noNA(output))
+  BP <- get("BP", envir=parent.frame())
+  assert_that(is.character(BP))
+  assert_that(not_empty(BP))
+  assert_that(length(BP)==1)
+  assert_that(noNA(BP))
+  bp_lab <- get("bp_lab", envir=parent.frame())
+  assert_that(BP %in% bp_lab, msg="'BP' is not recognized")
 }
 
 .sample_thetas <- function(nsamp, result){

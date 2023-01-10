@@ -1,0 +1,70 @@
+\begin{thebibliography}{9}
+\newcommand{\enquote}[1]{``#1''}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Bai and Ghosh(2018)}]{bai2018}
+Bai R, Ghosh M (2018).
+\newblock \enquote{On the beta prime prior for Scale Parameters in
+  High-Dimensional Bayesian Regression models.}
+\newblock \emph{arXiv preprint arXiv:1807.06539}.
+
+\bibitem[{Bhattacharya \emph{et~al.}(2016)Bhattacharya, Chakraborty, and
+  Mallick}]{bhattacharya2016}
+Bhattacharya A, Chakraborty A, Mallick BK (2016).
+\newblock \enquote{Fast sampling with {G}aussian scale mixture priors in
+  high-dimensional regression.}
+\newblock \emph{Biometrika}, p. asw042.
+
+\bibitem[{Brown and Griffin(2010)}]{brown2010}
+Brown PJ, Griffin JE (2010).
+\newblock \enquote{Inference with normal-gamma prior distributions in
+  regression problems.}
+\newblock \emph{Bayesian analysis}, \textbf{5}(1), 171--188.
+
+\bibitem[{Caron and Doucet(2008)}]{caron2008}
+Caron F, Doucet A (2008).
+\newblock \enquote{Sparse Bayesian nonparametric regression.}
+\newblock In \emph{Proceedings of the 25th international conference on Machine
+  learning}, pp. 88--95.
+
+\bibitem[{Hoerl and Kennard(1970)}]{hoerl1970}
+Hoerl AE, Kennard RW (1970).
+\newblock \enquote{Ridge regression: Biased estimation for nonorthogonal
+  problems.}
+\newblock \emph{Technometrics}, \textbf{12}(1), 55--67.
+
+\bibitem[{Karabatsos(2018)}]{karabatsos2018}
+Karabatsos G (2018).
+\newblock \enquote{Marginal maximum likelihood estimation methods for the
+  tuning parameters of ridge, power ridge, and generalized ridge regression.}
+\newblock \emph{Communications in Statistics - Simulation and Computation},
+  \textbf{47}(6), 1632--1651.
+\newblock \doi{10.1080/03610918.2017.1321119}.
+
+\bibitem[{Rue(2001)}]{rue2001}
+Rue H (2001).
+\newblock \enquote{Fast sampling of {G}aussian Markov random fields.}
+\newblock \emph{Journal of the Royal Statistical Society: Series B (Statistical
+  Methodology)}, \textbf{63}(2), 325--338.
+
+\bibitem[{Schmidt and Makalic(2019)}]{schmidt2020}
+Schmidt DF, Makalic E (2019).
+\newblock \enquote{Bayesian Generalized Horseshoe Estimation of Generalized
+  Linear Models.}
+\newblock In \emph{Joint European Conference on Machine Learning and Knowledge
+  Discovery in Databases}, pp. 598--613. Springer.
+
+\bibitem[{Zhang \emph{et~al.}(2016)Zhang, Reich, and Bondell}]{zhang2016}
+Zhang Y, Reich BJ, Bondell HD (2016).
+\newblock \enquote{High Dimensional Linear Regression via the {R2-D2} Shrinkage
+  Prior.}
+\newblock \eprint{1609.00046}.
+
+\end{thebibliography}

@@ -111,6 +111,7 @@ void scale(arma::mat* x){
   x->each_row() %= cs;
 }
 
+
 ////////////////////////////////////////////////////
 //-------------- External functions --------------//
 ////////////////////////////////////////////////////
@@ -120,7 +121,7 @@ Rcpp::List brg_gibbs(arma::colvec y, arma::mat X, const int prior,
                      const double a = 0.5, const double b = 0.5,
                      const int mcmc = 1000, const int  burnin = 1000,
                      const int thin = 10, bool verbose = true,
-                     const int bp = 2){
+                     const int bp = 1){
 
 	// Dimension data
 	const int n = X.n_rows;
@@ -163,7 +164,7 @@ Rcpp::List brg_gibbs(arma::colvec y, arma::mat X, const int prior,
 	arma::colvec thetahat = (1/d) % (u.cols(0, d.n_elem-1).t()*y);
 	arma::mat ud = u * diagmat(d);
 	u.clear();
-  //Rcpp::Rcout << "debug 1 = "  << std::endl;
+  
 	// MML as starting value
 	boost::uintmax_t it = 1000;
 	const double yTy = sum(square(y));
@@ -533,7 +534,7 @@ Rcpp::List brl_gibbs(arma::colvec y, arma::mat X, arma::colvec g,
         
       //}
       
-      if(verbose && (k%100==0)){
+      if(verbose && (k%1000==0)){
         Rcpp::Rcout << k << " samples generated" << std::endl;
       }
     }
@@ -555,8 +556,8 @@ Rcpp::List brl_gibbs(arma::colvec y, arma::mat X, arma::colvec g,
 }
 
 /*
-// [[Rcpp::export(.ridge_fixed)]]
-Rcpp::List gridge_fixed(arma::colvec y, arma::mat X, arma::colvec g){ 
+// [[Rcpp::export(.brl_closedform)]]
+Rcpp::List brl_closedform(arma::colvec y, arma::mat X, arma::colvec g){ 
   
   const int n = X.n_rows;
   const int p = X.n_cols;

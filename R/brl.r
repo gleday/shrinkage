@@ -91,35 +91,20 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
   #             PRE-PROCESSING              #
   #-----------------------------------------#
   
-  # Check input argument y and X
+  # check input arguments
   .checky()
   .checkX()
-  
-  # Check input argument g
   .checkg()
-  K <- length(unique(g))
-  
-  # Check input argument prior
+  pr_lab <- c("invGamma", "BetaPrime", "invGaussian", "Gamma", "ml")
   .checkPrior()
-  pr <- c("invGamma", "BetaPrime", "invGaussian", "Gamma")
-  assert_that(prior%in%c(pr, "ml"), msg="'prior' is not recognized")
-  idx <- which(prior==pr)
-  
-  # Check input arguments a and b
   .checka()
   .checkb()
-  
-  # Check input arguments mcmc, burnin and thin
   .checkmcmc()
   .checkburnin()
   .checkthin()
-  
-  # Check input arguments output
   .checkoutput()
+  bp_lab <- c("GG", "IGIG")
   .checkBP()
-  bp <- c("GG", "IGIG")
-  assert_that(BP%in%bp, msg="'BP' is not recognized")
-  idx2 <- which(BP == bp)
   
   #-----------------------------------------#
   #                ALGORITHM                #
@@ -147,18 +132,24 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
     #   
     # }
   #}else{
-    
-    # gibbs
-    res <- .brl_gibbs(y, X, g, idx, a, b, mcmc, burnin, thin, verbose, idx2)
-    res$sigma2s <- res$sigma2s[,1]
-    
-    # labels
-    rownames(res$tau2s) <- paste0("tau2_", 1:K)
-    if(is.null(colnames(X))){
-      rownames(res$betas) <- paste0("b", 1:ncol(X))
-    }else{
-      rownames(res$betas) <- colnames(X)
-    }
+  
+  # prior and bp index/id
+  prior_id <- which(pr_lab == prior)
+  bp_id <- which(bp_lab == BP)
+  
+  # gibbs sampler
+  res <- .brl_gibbs(y, X, g, prior_id, a, b, mcmc, burnin, thin, verbose, bp_id)
+  
+  # convert to vector
+  res$sigma2s <- res$sigma2s[,1]
+  
+  # labels
+  rownames(res$tau2s) <- paste0("tau2_", 1:nrow(res$tau2s))
+  if(is.null(colnames(X))){
+    rownames(res$betas) <- paste0("b", 1:ncol(X))
+  }else{
+    rownames(res$betas) <- colnames(X)
+  }
     
   #}
   
