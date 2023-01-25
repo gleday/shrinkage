@@ -22,52 +22,72 @@ posterior_linpred <- function(object, X, output = "both"){
   #              PREPROCESSING              #
   #-----------------------------------------#
   
-  # Check input argument object
+  # check input arguments
   .checkX()
-
-  # Check input arguments output
+  out_lab <- c("samples", "summary", "both")
   .checkoutput()
-  assert_that(output %in% c("samples", "summary", "both"), msg="'output' is not recognized")
   
   #-----------------------------------------#
   #    POSTERIOR SAMPLES AND SUMMARIES      #
   #-----------------------------------------#
   
   out <- list()
-  if("betas" %in% names(object)){
-    out$samples <- crossprod(t(X), object$betas)
-    if(output != "samples"){
-      out$summary <- t(apply(out$samples, 1, eightnum))
+  if("svd" %in% names(object)){
+    
+    # summary
+    t_mean <- rowSums(sweep(X, 2 , object$betas_summary[, "Mean"], "*"))
+    XV <- tcrossprod(X, t(object$svd$v))
+    t_var <- rowSums(sweep(XV, 2 , sqrt(object$theta$var), "*")^2)
+    out$summary <- t(mapply(.sixnum_t, mean = t_mean, scale = t_var, df = object$n))
+    
+    # samples
+    if(output != "summary"){
+      out$samples <- mapply(
+        .generate_t, mean = t_mean, scale = t_var, df = object$n, ns = 5000)
     }
   }else{
-    if("betas_summary" %in% names(object)){
-      t_mean <- rowSums(sweep(X, 2 , object$betas_summary[, 1], "*"))
-      XV <- tcrossprod(X, t(object$v))
-      t_var <- rowSums(sweep(XV, 2 , sqrt(object$vartheta), "*")^2)
-      out$summary <- t(mapply(.sixnum_t, mean = t_mean, scale = t_var, df = object$n))
-    }else{
-      if(all(c("v", "thetas") %in% names(object))){
-        XV <- tcrossprod(X, t(object$v))
-        out$samples <- crossprod(t(XV),  object$thetas) #+ object$intercept
-        out$samples <- sweep(out$samples, 2 , object$intercept, "+")
-        if(output != "samples"){
-          out$summary <- t(apply(out$samples, 1, eightnum))
-        }
-      }else{
-        if(all(c("v", "thetas_summary") %in% names(object))){
-          XV <- tcrossprod(X, t(object$v))
-          t_mean <- rowSums(sweep(XV, 2 , object$thetas_summary[, 1], "*")) + object$intercept
-          t_var <- rowSums(sweep(XV, 2 , sqrt(object$vartheta), "*")^2)
-          out$summary <- t(mapply(.sixnum_t, mean = t_mean, scale = t_var, df = object$n))
-        }
+    
+    # samples
+    out$samples <- crossprod(t(X), object$betas)
+    
+    # summary
+    if(output != "samples"){
+      out$summary <- t(apply(out$samples, 1, eightnum))
+      if(output == "summary"){
+        out <- out["summary"]
       }
     }
   }
   
+  # out <- list()
+  # if("betas" %in% names(object)){
+  # 
+  # }else{
+  #   if("betas_summary" %in% names(object)){
+  # 
+  #   }else{
+  #     if(all(c("v", "thetas") %in% names(object))){
+  #       XV <- tcrossprod(X, t(object$v))
+  #       out$samples <- crossprod(t(XV),  object$thetas) #+ object$intercept
+  #       out$samples <- sweep(out$samples, 2 , object$intercept, "+")
+  #       if(output != "samples"){
+  #         out$summary <- t(apply(out$samples, 1, eightnum))
+  #       }
+  #     }else{
+  #       if(all(c("v", "thetas_summary") %in% names(object))){
+  #         XV <- tcrossprod(X, t(object$v))
+  #         t_mean <- rowSums(sweep(XV, 2 , object$thetas_summary[, 1], "*")) + object$intercept
+  #         t_var <- rowSums(sweep(XV, 2 , sqrt(object$vartheta), "*")^2)
+  #         out$summary <- t(mapply(.sixnum_t, mean = t_mean, scale = t_var, df = object$n))
+  #       }
+  #     }
+  #   }
+  # }
+  
   # keep summary
-  if(length(out)!=0 & output == "summary"){
-    out <- out["summary"]
-  }
+  # if(length(out)!=0 & output == "summary"){
+  #   out <- out["summary"]
+  # }
 
   out
 }

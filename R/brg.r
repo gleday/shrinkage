@@ -11,6 +11,7 @@
 #' @param verbose logical. Whether information on progress should be printed.
 #' @param output character. Either "samples", "summary" or "both".
 #' @param BP character. Parametrization of Beta Prime prior. Either "GG" (default) or "IGIG".
+#' @param tau2_0 numeric. Value of global variance when \code{prior = "fixed"}.
 #'
 #' @description 
 #' This function implements inference methods for the linear regression model with various global shrinkage priors.
@@ -30,6 +31,7 @@
 #'  \item{}{\eqn{\tau^2 \ \sim\  \text{InvGaussian}(a, b)} when \code{prior = "invGaussian"}}
 #'  \item{}{\eqn{\tau^2 \ \sim\  \text{Gamma}(a, b)} when \code{prior = "Gamma"}}
 #'  \item{}{\eqn{\tau^2 \ =\  \hat{\tau}_{\text{ML}}^2} when \code{prior = "ml"}}
+#'  \item{}{\eqn{\tau^2 \ =\  \tau_{0}^2} when \code{prior = "fixed"}}
 #' } 
 #' 
 #' where \eqn{\text{Gamma}()} represents the Gamma distribution with
@@ -95,7 +97,7 @@
 #' @export
 brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
                 burnin = 5000L, thin = 10L, verbose = TRUE,
-                output = "both", BP = "GG"){
+                output = "both", BP = "GG", tau2_0 = 1){
   
   #-----------------------------------------#
   #              PREPROCESSING              #
@@ -104,16 +106,19 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
   # check input arguments
   .checky()
   .checkX()
-  pr_lab <- c("invGamma", "BetaPrime", "invGaussian", "Gamma", "ml")
+  pr_lab <- c("invGamma", "BetaPrime", "invGaussian", "Gamma", "ml", "fixed")
   .checkPrior()
   .checka()
   .checkb()
   .checkmcmc()
   .checkburnin()
   .checkthin()
+  out_lab <- c("samples", "summary", "both")
   .checkoutput()
+  assert_that(length(tau2_0)==1)
   bp_lab <- c("GG", "IGIG")
   .checkBP()
+  .checktau2_0()
   
   #-----------------------------------------#
   #                ALGORITHM                #
@@ -121,28 +126,29 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
   
   tp1 <- proc.time()
   
-  if(prior == "ml"){
+  if(prior %in% c("ml", "fixed")){
     
     if(verbose){
       cat("Closed-form inference")
     }
     
     # closed-form inference
-    res0 <- .brg_closedform(y, X)
+    res <- .brg_closedform(y, X, prior == "fixed", tau2_0)
     tp2 <- proc.time() - tp1
     
     # convert to vector
-    res0$thetabar <- res0$thetabar[, 1]
-    res0$vartheta <- res0$vartheta[, 1]
-    res0$betabar <- res0$betabar[, 1]
-    res0$varbeta <- res0$varbeta[, 1]
-    res0$d <- res0$d[, 1]
+    res$beta$bar <- res$beta$bar[, 1]
+    res$beta$var <- res$beta$var[, 1]
+    res$svd$d <- res$svd$d[, 1]
+    res$theta$hat <- res$theta$hat[, 1]
+    res$theta$bar <- res$theta$bar[, 1]
+    res$theta$var <- res$theta$var[, 1]
     
     if(verbose){
       cat("\n")
     }
     
-    # summary statistics: exact or approximate (based on sampling)
+    # summary statistics: exact or approximate (by sampling)
     if(mcmc == 0){
       
       if(verbose){
@@ -150,7 +156,7 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
       }
       
       # summary for betas (Mean, sd and quantiles)
-      mat <- t(mapply(.sixnum_t, mean = res0$betabar, scale = res0$varbeta, df = res0$n))
+      mat <- t(mapply(.sixnum_t, mean = res$beta$bar, scale = res$beta$var, df = res$n))
       
       # row and col labels
       if(is.null(colnames(X))){
@@ -160,24 +166,13 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
       }
       colnames(mat) <- c("Mean", "Sd", "Q_0.025", "Median", "Q_0.975", "Mode")
       
-      # output object
-      res <- list("betas_summary" = mat)
-      
-      # tau2 is fixed
-      res$tau2s <- 1/res0$tauminus2
+      # output summary of betas
+      res$betas_summary <- mat
       
       # summary for sigma2 (Mean, sd and quantiles)
-      res$sigma2s <- c("invGamma_shape" = res0$n/2, "invGamma_scale" = res0$sigma2scale)
-      res$sigma2s_summary <- .sixnum_InvGamma(res0$n/2, res0$sigma2scale)
+      #res$sigma2s <- c("invGamma_shape" = res$n/2, "invGamma_scale" = res$sigma2scale)
+      res$sigma2s_summary <- .sixnum_InvGamma(res$n/2, res$sigma2scale)
       names(res$sigma2s_summary) <- colnames(mat)
-      
-      # save additional information
-      res$thetahat <- res0$thetahat
-      res$thetabar <- res0$thetabar
-      res$vartheta <- res0$vartheta
-      res$d <- res0$d
-      res$v <- res0$v
-      res$n <- res0$n
       
       if(verbose){
         cat("\n")
@@ -190,13 +185,10 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
       }
       
       # sample marginal posteriors of betas
-      res <- list("betas" = .sample_betas(mcmc, result = res0))
-      
-      # tau2 is fixed
-      res$tau2s <- 1/res0$tauminus2
-      
+      res$betas <- .sample_betas(mcmc, result = res)
+
       # sample marginal posterior of sigma
-      res$sigma2s <- 1/rgamma(mcmc, shape = res0$n/2, rate = res0$sigma2scale)
+      res$sigma2s <- 1/rgamma(mcmc, shape = res$n/2, rate = res$sigma2scale)
       
       if(verbose){
         cat("\n")
@@ -214,7 +206,6 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
     
     # gibbs sampler
     res <- .brg_gibbs(y, X, prior_id, a, b, mcmc, burnin, thin, verbose, bp_id)
-    tp2 <- proc.time() - tp1
     
     # convert to vector
     res$tau2s <- res$tau2s[,1]
@@ -237,7 +228,7 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
     
     # Summarize samples
     res$betas_summary <- t(apply(res$betas, 1, eightnum))
-    res$tau2s_summary <- eightnum(res$tau2s)
+    if(!prior %in% c("ml", "fixed")) res$tau2s_summary <- eightnum(res$tau2s)
     res$sigma2s_summary <- eightnum(res$sigma2s)
     
     # Labels
@@ -253,7 +244,14 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
     
   }
   
+  # components to output
+  ind <- !(names(res) %in% c("beta", "sigma2scale"))
+
+  # type of model
+  res$model <- c("brg_", prior)
+  
+  # time in seconds
   res$time <- proc.time() - tp1
   
-  return(res)
+  return(res[ind])
 }

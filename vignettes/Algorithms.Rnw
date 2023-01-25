@@ -9,6 +9,7 @@
 \usepackage{amsfonts}
 \renewcommand{\textfraction}{0}
 %\usepackage[sort,comma]{natbib}
+\usepackage{multicol}
 
 \author{Gwena{\"e}l G.R. Leday\\Wageningen University and Research}
 \Plainauthor{G.G.R. Leday}
@@ -56,54 +57,86 @@ yield ridge-type estimators \citep{hoerl1970}.
 %------------------------------------------------------------------------------%
 \subsection{Model and priors}
 
-Let $y$ denote a $n$-dimensional response variable and $X$ an $n$ by $p$
-observation matrix. Then, the linear regression model with global shrinkage is:
+Let $y$ denote a $n\times 1$ response vector, $X$ an $n\times p$
+observation matrix and $\beta$ a $p\times 1$ vector of regression parameters.
+Then, the linear regression model with global shrinkage is:
 \begin{eqnarray}
 	\label{linear_model_global}
-	y \mid \beta, \sigma^{2} &\sim & \mathrm{N}_n(X\beta, \sigma^2 I_n)\\
-	\beta \mid \sigma^2,\tau^2 &\sim &  \mathrm{N}_p(0, \tau^2 \sigma^2 I_p)\\
-	p(\sigma^2) &\propto & \sigma^{-2}
+	y \mid \beta, \sigma^{2} &\sim & \mathrm{N}_n(X\beta, \sigma^2 I_n),\\
+	\beta \mid \sigma^2,\tau^2 &\sim &  \mathrm{N}_p(0, \tau^2 \sigma^2 I_p),\\
+	p(\sigma^2) &\propto & \sigma^{-2}.
 \end{eqnarray}
 The R package \pkg{shrinkage} offers the following choices of priors for $\tau^2$:
+\begin{multicols}{3}
 \begin{enumerate}
 	\item $\tau^2 \ \sim\  \mathrm{InvGamma}(a, b)$\\[-20pt]
 	\item $\tau^2 \ \sim\  \mathrm{BetaPrime}(a, b)$\\[-20pt]
+	\item[\vspace{\fill}]
 	\item $\tau^2 \ \sim\  \mathrm{InvGaussian}(a, b)$\\[-20pt]
 	\item $\tau^2 \ \sim\  \mathrm{Gamma}(a, b)$\\[-20pt]
+	\item[\vspace{\fill}]
 	\item $\tau^2 \ =\  \hat{\tau}_{\mathrm{ML}}^2$
+	\item $\tau^2 \ =\  \tau_0^2$
+	\item[\vspace{\fill}]
 \end{enumerate}
-
+\end{multicols}
+\null
+\vspace{-40pt}
 %------------------------------------------------------------------------------%
 \subsection{Closed-form inference}
 
 When $\tau^2 \ =\  \hat{\tau}_{\mathrm{ML}}^2$ the prior variance $\tau^2$ is
-not endowed with a prior probability distribution but is instead set to the
-value that maximizes the marginal likelihood (ML) of the model (empirical Bayes).
-In such case, Bayesian inference is carried out analytically as the marginal
-posterior distributions of $\beta$ and $\sigma^2$ are available in closed-form:
+set to the value that maximizes the marginal likelihood (ML) of the model (empirical Bayes),
+whereas when $\tau^2 \ =\  \tau_0^2$ it is set to the value provided by the user.
+
+In both cases, the prior variance $\tau^2$ is fixed and Bayesian inference can be
+carried out analytically. The marginal posterior distributions of $\beta$ and $\sigma^2$ are:
 \begin{eqnarray*}
-\beta \mid y \sim \mathrm{T}_p \left( \bar{\beta} ,  \frac{y^T y - \bar{\beta}^T \bar{\Sigma}^{-1} \bar{\beta}}{n} \bar{\Sigma}, n\right) \quad \mathrm{and} \quad \sigma^2 \mid y \sim \mathrm{InvGamma} \left( \frac{n}{2} , \frac{1}{2} \left[ y^T y - \bar{\beta}^T \bar{\Sigma}^{-1} \bar{\beta} \right] \right).
+\beta \mid y \sim \mathrm{T}_p \left( \bar{\beta} ,  \frac{y^T y - \bar{\beta}^T \bar{\Sigma}^{-1} \bar{\beta}}{n} \bar{\Sigma}, n\right) \quad \mathrm{and} \quad \sigma^2 \mid y \sim \mathrm{InvGamma} \left( \frac{n}{2} , \frac{1}{2} \left[ y^T y - \bar{\beta}^T \bar{\Sigma}^{-1} \bar{\beta} \right] \right),
 \end{eqnarray*}
-Here
+where
 \begin{eqnarray*}
-  \bar{\Sigma} &=& \left( X^T X + \tau^{-2} I_p\right)^{-1} \quad \text{and}\quad \bar{\beta} = \bar{\Sigma} X^T y.
+  \bar{\Sigma} &=& \left( X^T X + \tau^{-2} I_p\right)^{-1} \quad \mathrm{and}\quad \bar{\beta} = \bar{\Sigma} X^T y.
 \end{eqnarray*}
+The posterior predictive distribution for a new $m\times p$ observation matrix $\tilde{X}$ is:
+\begin{eqnarray*}
+  \tilde{y} \mid y &\sim & \mathrm{T}_m \left( \tilde{X}\bar{\beta}, \frac{y^T y - \bar{\beta}^T \bar{\Sigma}^{-1} \bar{\beta}}{n} (I_m + \tilde{X}\bar{\Sigma} \tilde{X}^T), n\right)
+\end{eqnarray*}
+
 The marginal likelihood is also available in closed-form:
 \begin{eqnarray*}
-p(y) = \pi^{-\frac{n}{2}} \left( \tau^2\right)^{-\frac{p}{2}} \mid X^T X + \tau^{-2} I_p \mid^{-\frac{1}{2}} \Gamma\left( \frac{n}{2} \right) \left( \frac{1}{2} y^T y - \frac{1}{2} \bar{\beta}^T \bar{\Sigma}^{-1} \bar{\beta} \right)^{-\frac{n}{2}},
+p(y) = \pi^{-\frac{n}{2}} \left( \tau^2\right)^{-\frac{p}{2}} \mid \bar{\Sigma} \mid^{\frac{1}{2}} \Gamma\left( \frac{n}{2} \right) \left( \frac{1}{2} y^T y - \frac{1}{2} \bar{\beta}^T \bar{\Sigma}^{-1} \bar{\beta} \right)^{-\frac{n}{2}},
 \end{eqnarray*}
-and its maximizer,
+
+In practice, it is convenient to use the singular value decomposition (SVD) of $X=UDV^T=F V^T$,
+where $D$ is a $n\times r$ diagonal matrix with diagonal elements $d_r$,
+$r=1, \ldots, q=\mathrm{min}(n,p)$, and $U$ and $V$ are $n\times n$ and
+$p\times r$ orthogonal matrices. This way we can write:
+\begin{eqnarray*}
+\beta \mid y &\sim& \mathrm{T}_p \left( V \bar{\theta} ,  \frac{y^T y - \bar{\theta}^T \bar{\Theta}^{-1} \bar{\theta}}{n} V^T\bar{\Theta}V, n\right),\\
+\sigma^2 \mid y &\sim& \mathrm{InvGamma} \left( \frac{n}{2} , \frac{1}{2} \left[ y^T y - \bar{\theta}^T \bar{\Sigma}^{-1} \bar{\theta} \right] \right)\quad \mathrm{and} \quad  \\
+p(y) &=& \pi^{-\frac{n}{2}} \left( \tau^2\right)^{-\frac{p}{2}} \mid \bar{\Theta} \mid^{\frac{1}{2}} \Gamma\left( \frac{n}{2} \right) \left( \frac{1}{2} y^T y - \frac{1}{2} \bar{\theta}^T \bar{\Theta}^{-1} \bar{\theta} \right)^{-\frac{n}{2}},
+\end{eqnarray*}
+in terms of the posterior expectation and covariance of the
+$q\times 1$ transformed parameter vector $\theta = V^T \beta$
+corresponding to the regression of $y$ on the factor matrix $F$:
+\begin{eqnarray*}
+  \bar{\Theta} &=& \left( D^2 + \tau^{-2} I_q\right)^{-1} \quad \mathrm{and}\quad \bar{\theta} = \bar{\Theta} F^T y.
+\end{eqnarray*}
+
+Using the SVD representation, the empirical Bayes estimate of $\tau^2$,
 \begin{eqnarray*}
 \hat{\tau}_{\mathrm{ML}}^2 = \argmax_{\tau^2}\ \log p(y),
 \end{eqnarray*}
-obtained very efficiently \citep{karabatsos2018} when re-writing the
-$\log$-marginal likelihood
+can be computed very efficiently because the evaluation of $\log p(y)$ for different values of $\tau^2$ does not require any 
+matrix decomposition or inversion.
+The $\log$-marginal likelihood is expressed in terms of the singular values of $X$ using:
 \begin{eqnarray*}
-\log p(y) = -\frac{n}{2} \log\pi - \frac{p}{2} \log\tau^2 - \frac{1}{2} \sum_{r=1}^{q}{\log(d_r^2 + \tau^{-2})} +\log\Gamma\left( \frac{n}{2}\right) - \frac{n}{2} \log\left( \frac{1}{2}y^Ty - \frac{1}{2}\sum_{r=1}^{q}{\frac{\hat{\theta}_r^2 d_j^4}{d_r^2 + \tau^{-2}}} \right),
+\log \mid \bar{\Theta} \mid^{\frac{1}{2}} = - \frac{1}{2} \sum_{r=1}^{q}{\log(d_r^2 + \tau^{-2})} \quad \mathrm{and}\quad \bar{\theta}^T \bar{\Theta}^{-1} \bar{\theta} = \sum_{r=1}^{q}{\bar{\theta}_r^2 (d_r^2 + \tau^{-2})} = \sum_{r=1}^{q}{\frac{\hat{\theta}_r^2 d_r^4}{d_r^2 + \tau^{-2}}}.
 \end{eqnarray*}
-in terms of the singular values $d_r$, $r=1, \ldots, q=\mathrm{min}(n,p)$, of
-$X=UDV^T=F V^T$ and the maximum likelihood estimate
-$\hat{\theta} = ( F^T F )^{-1} F^T y=D^{-1}U^T y$ of $\theta = V^T \beta$.
+The latter quantity can be computed from $\bar{\theta}$ or the maximum likelihood estimate
+$\hat{\theta} = D^{-1}U^T y$ of $\theta$ as $\bar{\theta} = \left(I_q + \tau^{-2} D^{-2}\right)^{-1} \hat{\theta}$ \citep{karabatsos2018}.
+
 
 %------------------------------------------------------------------------------%
 \subsection{Inference using a Gibbs sampler}
@@ -234,13 +267,22 @@ shrinkage priors is
 \end{eqnarray}
 where $\tau^2=(\tau^2_1, \ldots, \tau^2_K)$ and the diagonal matrix $D_{\tau}$ is such that $(D_{\tau})_{jj} = \tau_k^2$ if variable $j = 1, \ldots, p$ belongs to group $k = 1, \ldots, K$.
 
-The R package \pkg{shrinkage} offers the following choices of priors for $\tau^2$:
+The R package \pkg{shrinkage} offers the following choices of priors:
+\begin{multicols}{3}
 \begin{enumerate}
 	\item $\tau^2_k \ \sim\  \mathrm{InvGamma}(a, b)$\\[-20pt]
 	\item $\tau^2_k \ \sim\  \mathrm{BetaPrime}(a, b)$\\[-20pt]
+	\item[\vspace{\fill}]
 	\item $\tau^2_k \ \sim\  \mathrm{InvGaussian}(a, b)$\\[-20pt]
 	\item $\tau^2_k \ \sim\  \mathrm{Gamma}(a, b)$
+	\item[\vspace{\fill}]
+	\item $\tau^2 \ =\  \hat{\tau}_{\mathrm{ML}}^2$
+	\item $\tau^2 \ =\  \tau_0^2$
+	\item[\vspace{\fill}]
 \end{enumerate}
+\end{multicols}
+\null
+\vspace{-40pt}
 
 Several models proposed in the literature can be seen as models with local shrinkage priors, e.g.:
 \begin{itemize}
@@ -252,34 +294,72 @@ Several models proposed in the literature can be seen as models with local shrin
 %------------------------------------------------------------------------------%
 \subsection{Closed-form inference}
 
-When $\tau^2 \ =\  \hat{\tau}_{\mathrm{ML}}^2$ the prior variance $\tau^2$ is
-not endowed with a prior probability distribution but is instead set to the
-value that maximizes the marginal likelihood (ML) of the model (empirical Bayes).
-In such case, Bayesian inference is carried out analytically as the marginal
-posterior distributions of $\beta$ and $\sigma^2$ are available in closed-form:
+As for linear regression models with global shrinkage priors,
+when $\tau^2  =  \hat{\tau}_{\mathrm{ML}}^2$ the prior variances $\tau_k^2$
+for $k=1, \ldots,K$ are set to the values that maximizes the marginal likelihood (ML)
+of the model (empirical Bayes), whereas when $\tau^2 = \tau_0^2$ they are set to
+the values provided by the user.
+
+In both cases Bayesian inference is carried out analytically. The marginal
+posterior distributions of $\beta$ and $\sigma^2$ are:
 \begin{eqnarray*}
-\beta \mid y \sim \mathrm{T}_p \left( \tilde{\beta} ,  \frac{y^T y - \tilde{\beta}^T \tilde{\Sigma}^{-1} \tilde{\beta}}{n} \tilde{\Sigma}, n\right) \quad \mathrm{and} \quad \sigma^2 \mid y \sim \mathrm{InvGamma} \left( \frac{n}{2} , \frac{1}{2} \left[ y^T y - \tilde{\beta}^T \tilde{\Sigma}^{-1} \tilde{\beta} \right] \right).
+\beta \mid y \sim \mathrm{T}_p \left( \tilde{\beta} ,  \frac{y^T y - \tilde{\beta}^T \tilde{\Sigma}^{-1} \tilde{\beta}}{n} \tilde{\Sigma}, n\right) \quad \mathrm{and} \quad \sigma^2 \mid y \sim \mathrm{InvGamma} \left( \frac{n}{2} , \frac{1}{2} \left[ y^T y - \tilde{\beta}^T \tilde{\Sigma}^{-1} \tilde{\beta} \right] \right)
 \end{eqnarray*}
-Here
+with\\[-30pt]
 \begin{eqnarray*}
-  \tilde{\Sigma} = \left( X^T X + D_{\tau}^{-1}\right)^{-1} \quad \text{and}\quad \tilde{\beta} = \tilde{\Sigma} X^T y.
+  \tilde{\Sigma} = \left( X^T X + D_{\tau}^{-1}\right)^{-1} \qquad \mathrm{and}\qquad \tilde{\beta} = \tilde{\Sigma} X^T y.
 \end{eqnarray*}
-The marginal likelihood is also available in closed-form:
+The marginal likelihood is:
 \begin{eqnarray*}
-p(y) = \pi^{-\frac{n}{2}} \left(\prod_{k=1}^{K}{(\tau_k^2)^{-\frac{p}{2}}}\right) \mid X^T X + D_{\tau}^{-1} \mid^{-\frac{1}{2}} \Gamma\left( \frac{n}{2} \right) \left( \frac{1}{2} y^T y - \frac{1}{2} \tilde{\beta}^T \tilde{\Sigma}^{-1} \tilde{\beta} \right)^{-\frac{n}{2}},
+p(y) = \pi^{-\frac{n}{2}} \mid D_{\tau} \mid^{-\frac{1}{2}} \mid X^T X + D_{\tau}^{-1} \mid^{-\frac{1}{2}} \Gamma\left( \frac{n}{2} \right) \left( \frac{1}{2} y^T y - \frac{1}{2} \tilde{\beta}^T \tilde{\Sigma}^{-1} \tilde{\beta} \right)^{-\frac{n}{2}}.
 \end{eqnarray*}
-and its maximizer,
+and its maximizer 
 \begin{eqnarray*}
 \hat{\tau}_{\mathrm{ML}}^2 = \argmax_{\tau^2}\ \log p(y),
 \end{eqnarray*}
-obtained very efficiently \citep{karabatsos2018} when re-writing the
-$\log$-marginal likelihood
+is found using the strategy of \citep{vandeWiel2016, vandeWiel2022},
+which combines simulated annealing and Nelder-Mead optimization algorithms to
+search globally and locally the optimum.
+
+Computational efficiency is achieved by allowing fast
+evaluations of the (log-)marginal likelihood.
+When $n \geq p$ this is achieved by pre-computing the cross-products $y^T y$ ,
+$X^T y$, and $X^T X$. When $p > n$ this is achieved by first reformulating
+the marginal likelihood using:
 \begin{eqnarray*}
-\log p(y) = -\frac{n}{2} \log\pi - \frac{p}{2} \log\tau^2 - \frac{1}{2} \sum_{r=1}^{q}{\log(d_r^2 + \tau^{-2})} +\log\Gamma\left( \frac{n}{2}\right) - \frac{n}{2} \log\left( \frac{1}{2}y^Ty - \frac{1}{2}\sum_{r=1}^{q}{\frac{\hat{\theta}_r^2 d_j^4}{d_r^2 + \tau^{-2}}} \right),
+\mid X^T X + D_{\tau}^{-1} \mid \ =\ \mid D_{\tau}^{-1} \mid \ \mid X D_{\tau} X^T + I_n \mid
 \end{eqnarray*}
-in terms of the singular values $d_r$, $r=1, \ldots, q=\mathrm{min}(n,p)$, of
-$X=UDV^T=F V^T$ and the maximum likelihood estimate
-$\hat{\theta} = ( F^T F )^{-1} F^T y=D^{-1}U^T y$ of $\theta = V^T \beta$.
+and
+\begin{eqnarray*}
+\tilde{\beta}^T \tilde{\Sigma}^{-1} \tilde{\beta} = y^T X D_{\tau} X^T y - y^T X D_{\tau} X^T \left( X D_{\tau} X^T + I_n \right)^{-1} X D_{\tau} X^T y ,
+\end{eqnarray*}
+obtained with Sylvester's determinant and Woodbury's formulas. Then,
+\begin{eqnarray*}
+X D_{\tau} X^T = \sum_{k=1}^{K}{\tau^2_k X_k X_k^T}
+\end{eqnarray*}
+is computed efficiently for different values of the prior variances by
+pre-computing the $K$ $n\times n$ matrices $X_k X_k^T$, where $X_k$ is
+the $n \times p_k$ observation matrix for group $k=1,\ldots,K$.
+
+The R package \pkg{shrinkage} first computes $\hat{\tau}_{\mathrm{ML}}^2$ and
+then fits a linear model with fixed global variance $\tau_0^2 = 1$ (Section 1.1)
+using the scaled design matrix $X D_{\hat{\tau}_{\mathrm{ML}}}$.
+This way, the SVD decomposition of $X D_{\hat{\tau}_{\mathrm{ML}}}$ is used to
+efficiently store results, compute posterior summaries
+and simulate from posterior distributions.
+
+%When $\tau^2 \ =\  \tau_0^2$ it is convenient \citep{vandeWiel2016} to use the SVD decomposition of
+%$X D_{\tau} = U_0 D_0 V_0^t$ to facilitate computation of the log-marginal likelihood:
+%\begin{eqnarray*}
+%\log p(y) = -\frac{n}{2} \log\pi - \frac{p}{2} \log\tau^2 - \frac{1}{2} \sum_{r=1}^{q}{\log(d_r^2 + \tau^{-2})} +\log\Gamma\left( \frac{n}{2}\right) - \frac{n}{2} \log\left( \frac{1}{2}y^Ty - \frac{1}{2}\sum_{r=1}^{q}{\frac{\hat{\theta}_r^2 d_j^4}{d_r^2 + \tau^{-2}}} \right),
+%\end{eqnarray*}
+%in terms of the singular values $d_r$, $r=1, \ldots, q=\mathrm{min}(n,p)$, of
+%$X=UDV^T=F V^T$ and the maximum likelihood estimate
+%$\hat{\theta} = ( F^T F )^{-1} F^T y=D^{-1}U^T y$ of $\theta = V^T \beta$.
+
+
+
+
 
 %------------------------------------------------------------------------------%
 \subsection{Inference using a Gibbs sampler}

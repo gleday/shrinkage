@@ -90,15 +90,62 @@ arma::colvec r_beta_bha(mat phi, colvec Ddiag, colvec alpha){
   return b;
 }
 
-double logML(const double tauminus2, const int p, const int n, const double yTy, colvec eigs, colvec thet){
+double logML(const double tauminus2, const int p, const int n, const double yTy, colvec eigvals, colvec thetahat){
   double out = -0.5*n*log(datum::pi);
   out += 0.5*p*log(tauminus2);
   out += lgamma(0.5*n);
   colvec egs = zeros(p);
-  egs.subvec(0, eigs.n_elem-1) += eigs;
+  egs.subvec(0, eigvals.n_elem-1) += eigvals;
   out -= 0.5*sum(log(egs + tauminus2));
-  out -= 0.5*n*log(0.5*yTy - 0.5*sum((square(thet)%square(eigs))/(eigs + tauminus2)));
+  out -= 0.5*n*log(0.5*yTy - 0.5*sum((square(thetahat)%square(eigvals))/(eigvals + tauminus2)));
   return(out);
+}
+
+double logML(arma::colvec tauminus2, const int p, const int n, const double yTy, colvec eigvals, colvec thetahat){
+  double out = -0.5*n*log(datum::pi);
+  out += 0.5*p*sum(log(tauminus2));
+  out += lgamma(0.5*n);
+  colvec eigs = zeros(p);
+  eigs.subvec(0, eigvals.n_elem-1) += eigvals;
+  out -= 0.5*sum(log(eigs + tauminus2));
+  out -= 0.5*n*log(0.5*yTy - 0.5*sum((square(thetahat)%square(eigvals))/(eigvals + tauminus2)));
+  return(out);
+}
+
+void fast_svd(arma::mat* X, arma::mat* u, arma::colvec* d, arma::mat* v){
+  
+  // SVD decomposition
+  if(X->n_rows >= X->n_cols){
+    arma::mat XTX = X->t()* *X;
+    svd_econ(*u, *d, *v, XTX, "right");
+    *d = sqrt(*d);
+    *u = *X * *v * diagmat(1/ *d);
+  }
+  else{
+    arma::mat XXT = *X * X->t();
+    svd_econ(*u, *d, *v, XXT, "left");
+    *d = sqrt(*d);
+    *v = X->t() * *u *diagmat(1/ *d);
+  }
+}
+
+// [[Rcpp::export(.fast_svd)]]
+Rcpp::List fast_svd_list(arma::mat X){
+  
+  // initialization
+  arma::mat u, v;
+  arma::colvec d;
+
+  fast_svd(&X, &u, &d, &v);
+  
+  // Output object
+  Rcpp::List out = Rcpp::List::create(
+    Rcpp::Named("u") = u,
+    Rcpp::Named("d") = d,
+    Rcpp::Named("v") = v
+  );
+  
+  return out;
 }
 
 void center(arma::mat* x){
@@ -111,6 +158,105 @@ void scale(arma::mat* x){
   x->each_row() %= cs;
 }
 
+double get_brg_opt_tauminus2(const double* yTy, arma::mat* u, arma::colvec* d, arma::mat* v, arma::colvec* thetahat){
+  
+  const int n = u->n_rows;
+  const int p = v->n_rows;
+  boost::uintmax_t it = 1000;
+  
+  // Useful quantities
+  arma::colvec d2 = square(*d);
+  
+  // Values of log-ML for a grid of tauminus2
+  mat gridlambda(100, 2, fill::zeros);
+  gridlambda.col(0) += logspace(-5, 20, 100);
+  for(int j=0; j<100; j++){
+    gridlambda(j, 1) = logML(gridlambda(j, 0), p, n, *yTy, d2, *thetahat);
+  }
+  
+  // Optimal shrinkage
+  uword idx = gridlambda.col(1).index_max();
+  double lowerVal;
+  double upperVal;
+  if(idx==0){
+    idx = 1;
+  }
+  if(idx == gridlambda.n_rows){
+    idx = idx - 1;
+  }
+  lowerVal = gridlambda(idx-1, 0);
+  upperVal = gridlambda(idx+1, 0);
+  const auto obj = [p, n, yTy, d2, thetahat](double x) { return -logML(x, p, n, *yTy, d2, *thetahat); };
+  const auto result = brent_find_minima(obj, lowerVal, upperVal, 1000, it);
+  auto lambdaOpt = 0.0, valOpt = 0.0;
+  std::tie(lambdaOpt, valOpt) = result;
+  
+  return(lambdaOpt);
+}
+
+// [[Rcpp::export(.get_brg_opt_tauminus2)]]
+double brg_eb_tauminus2(arma::colvec y, arma::mat X){
+  
+  // SVD decomposition
+  arma::mat u, v;
+  arma::colvec d;
+  fast_svd(&X, &u, &d, &v);
+  arma::colvec d2 = square(d);
+  
+  // quantities needed
+  const double yTy = sum(square(y));
+  arma::colvec thetahat = (1/ d) % (u.cols(0, d.n_elem - 1).t() * y);
+  
+  // maximizer of log-ML
+  double lambdaOpt = get_brg_opt_tauminus2(&yTy, &u, &d, &v, &thetahat);
+  
+  return lambdaOpt;
+}
+
+
+// // [[Rcpp::export(.get_brg_opt_tauminus2)]]
+// Rcpp::List get_brg_opt_tauminus2(arma::colvec y, arma::mat X){
+// 
+//   // svd decomposition
+//   Rcpp::List mysvd = fast_svd(X);
+//   arma::colvec d2 = square(mysvd[1]);
+// 
+//   // Useful quantities
+//   arma::colvec thetahat = (1/mysvd[1]) % (mysvd[0].cols(0, mysvd[1].n_elem-1).t()*y);
+//   const double yTy = sum(square(y));
+//   boost::uintmax_t it = 1000;
+// 
+//   // Values of log-ML for a grid of tauminus2
+//   mat gridlambda(100, 2, fill::zeros);
+//   gridlambda.col(0) += logspace(-5, 20, 100);
+//   for(int j=0; j<100; j++){
+//     gridlambda(j, 1) = logML(gridlambda(j, 0), X.n_cols, X.n_rows, yTy, d2, thetahat);
+//   }
+// 
+//   // // Optimal shrinkage
+//   // uword idx = gridlambda.col(1).index_max();
+//   // double lowerVal;
+//   // double upperVal;
+//   // if(idx==0){
+//   //   idx = 1;
+//   // }
+//   // if(idx==gridlambda.n_rows){
+//   //   idx = idx - 1;
+//   // }
+//   // lowerVal = gridlambda(idx-1, 0);
+//   // upperVal = gridlambda(idx+1, 0);
+//   // const auto obj = [p, n, yTy, d2, thetahat](double x) { return -logML(x, p, n, yTy, d2, thetahat); };
+//   // const auto result = brent_find_minima(obj, lowerVal, upperVal, 1000, it);
+//   // lambdaOpt = 0.0, valOpt = 0.0;
+//   // std::tie(lambdaOpt, valOpt) = result;
+// 
+//   // Output object
+//   Rcpp::List out = Rcpp::List::create(
+//     Rcpp::Named("gridlambda") = gridlambda
+//   );
+//   
+//   return out;
+// }
 
 ////////////////////////////////////////////////////
 //-------------- External functions --------------//
@@ -293,82 +439,58 @@ Rcpp::List brg_gibbs(arma::colvec y, arma::mat X, const int prior,
 }
 
 // [[Rcpp::export(.brg_closedform)]]
-Rcpp::List brg_closedform(arma::colvec y, arma::mat X){ 
-  
-  const int n = X.n_rows;
-  const int p = X.n_cols;
+Rcpp::List brg_closedform(arma::colvec y, arma::mat X, bool fixed = false,
+                          const double tau2 = 1){
   
   // SVD decomposition
-  arma::mat u;
-  arma::colvec d, d2;
-  arma::mat v;
-  if(n >= p){
-    arma::mat XTX = X.t()*X;
-    svd_econ(u, d2, v, XTX, "right");
-    d = sqrt(d2);
-    u = X*v*diagmat(1/d);
+  arma::mat u, v;
+  arma::colvec d;
+  fast_svd(&X, &u, &d, &v);
+  arma::colvec d2 = square(d);
+  
+  // quantities needed
+  const double yTy = sum(square(y));
+  arma::colvec thetahat = (1/ d) % (u.cols(0, d.n_elem - 1).t() * y);
+  
+  // maximizer of log-ML
+  double lambdaOpt;
+  if(fixed){
+    lambdaOpt = 1/tau2;
   }
   else{
-    arma::mat XXT = X*X.t();
-    svd_econ(u, d2, v, XXT, "left");
-    d = sqrt(d2);
-    v = X.t()*u*diagmat(1/d);
+    lambdaOpt = get_brg_opt_tauminus2(&yTy, &u, &d, &v, &thetahat);
   }
   
-  // Useful quantities
-  arma::colvec thetahat = (1/d) % (u.cols(0, d.n_elem-1).t()*y);
-  u.clear();
- boost::uintmax_t it = 1000;
-   const double yTy = sum(square(y));
-  
-  // Values of log-ML for a grid of tauminus2
-  mat gridlambda(100, 2, fill::zeros);
-  gridlambda.col(0) += logspace(-5, 20, 100);
-  for(int j=0; j<100; j++){
-    gridlambda(j, 1) = logML(gridlambda(j, 0), p, n, yTy, d2, thetahat);
-  }
-  
-  // Optimal shrinkage
-  uword idx = gridlambda.col(1).index_max();
-  double lowerVal;
-  double upperVal;
-  if(idx==0){
-    idx = 1;
-  }
-  if(idx==gridlambda.n_rows){
-    idx = idx - 1;
-  }
-  lowerVal = gridlambda(idx-1, 0);
-  upperVal = gridlambda(idx+1, 0);
-  const auto obj = [p, n, yTy, d2, thetahat](double x) { return -logML(x, p, n, yTy, d2, thetahat); };
-  const auto result = brent_find_minima(obj, lowerVal, upperVal, 1000, it);
-  auto lambdaOpt = 0.0, valOpt = 0.0;
-  std::tie(lambdaOpt, valOpt) = result;
-  
-  // Compute marginal posterior means and variances
-  colvec vartheta = 1/(d2+lambdaOpt);
-  colvec thetabar = (d2 % vartheta) % thetahat;
+  // posterior mean and variance of \theta
+  colvec thetavar = 1/(d2+lambdaOpt);
+  colvec thetabar = (d2 % thetavar) % thetahat;
   colvec betabar = v*thetabar;
   mat vv = v;
-  v.each_row() %= sqrt(vartheta.t());
-  colvec varbeta = arma::sum(square(v), 1);
+  v.each_row() %= sqrt(thetavar.t());
+  colvec betavar = arma::sum(square(v), 1);
   const double sigma2scale = yTy - sum((square(thetahat)%square(d2))/(d2 + lambdaOpt));
-  varbeta *= sigma2scale / n;
-  vartheta *= sigma2scale / n;
+  betavar *= sigma2scale / X.n_rows;
+  thetavar *= sigma2scale / X.n_rows;
   
   // Output object
-  Rcpp::List out = Rcpp::List::create(Rcpp::Named("grid") = gridlambda,
-                                      Rcpp::Named("tauminus2") = lambdaOpt,
-                                      Rcpp::Named("logML") = valOpt,
-                                      Rcpp::Named("thetahat") = thetahat,
-                                      Rcpp::Named("thetabar") = thetabar,
-                                      Rcpp::Named("vartheta") = vartheta,
-                                      Rcpp::Named("betabar") = betabar,
-                                      Rcpp::Named("varbeta") = varbeta,
-                                      Rcpp::Named("sigma2scale") = 0.5*sigma2scale,
-                                      Rcpp::Named("v") = vv,
-                                      Rcpp::Named("d") = d,
-                                      Rcpp::Named("n") = n);
+  Rcpp::List out = Rcpp::List::create(
+    Rcpp::Named("beta") = Rcpp::List::create(
+      Rcpp::Named("bar") = betabar,
+      Rcpp::Named("var") = betavar
+    ),
+    Rcpp::Named("tau2s") = 1/lambdaOpt,
+    Rcpp::Named("svd") = Rcpp::List::create(
+      Rcpp::Named("d") = d,
+      Rcpp::Named("v") = vv
+    ),
+    Rcpp::Named("theta") = Rcpp::List::create(
+      Rcpp::Named("hat") = thetahat,
+      Rcpp::Named("bar") = thetabar,
+      Rcpp::Named("var") = thetavar
+    ),
+    Rcpp::Named("sigma2scale") = 0.5*sigma2scale,
+    Rcpp::Named("n") = X.n_rows
+    );
   
   return out;
 }
@@ -557,11 +679,15 @@ Rcpp::List brl_gibbs(arma::colvec y, arma::mat X, arma::colvec g,
 
 /*
 // [[Rcpp::export(.brl_closedform)]]
-Rcpp::List brl_closedform(arma::colvec y, arma::mat X, arma::colvec g){ 
+Rcpp::List brl_closedform(arma::colvec y, arma::mat X, arma::colvec tauminus2,
+ bool fixed = false, const double tau2 = 1){
   
   const int n = X.n_rows;
   const int p = X.n_cols;
   
+  // scale X with tau2
+  X.each_row() %= 1/sqrt(tauminus2);
+
   // SVD decomposition
   arma::mat u;
   arma::colvec d, d2;
@@ -584,31 +710,6 @@ Rcpp::List brl_closedform(arma::colvec y, arma::mat X, arma::colvec g){
   u.clear();
   const double yTy = sum(square(y));
   
-  // Values of log-ML for a grid of tauminus2
-  mat gridlambda(100, 2, fill::zeros);
-  gridlambda.col(0) += logspace(-5, 20, 100);
-  for(int j=0; j<100; j++){
-    gridlambda(j, 1) = logML(gridlambda(j, 0), p, n, yTy, d2, thetahat);
-  }
-  
-  // Optimal shrinkage
-  uword idx = gridlambda.col(1).index_max();
-  double lowerVal;
-  double upperVal;
-  if(idx==0){
-    idx = 1;
-  }
-  if(idx==gridlambda.n_rows){
-    idx = idx - 1;
-  }
-  lowerVal = gridlambda(idx-1, 0);
-  upperVal = gridlambda(idx+1, 0);
-  const auto obj = [p, n, yTy, d2, thetahat](double x) { return -logML(x, p, n, yTy, d2, thetahat); };
-  boost::uintmax_t it = 1000;
-  const auto result = brent_find_minima(obj, lowerVal, upperVal, 1000, it);
-  auto lambdaOpt = 0.0, valOpt = 0.0;
-  std::tie(lambdaOpt, valOpt) = result;
-  
   // Compute marginal posterior means and variances
   colvec vartheta = 1/(d2+lambdaOpt);
   colvec thetabar = (d2 % vartheta) % thetahat;
@@ -620,7 +721,7 @@ Rcpp::List brl_closedform(arma::colvec y, arma::mat X, arma::colvec g){
   varbeta *= sigma2scale / n;
   
   // Output object
-  Rcpp::List out = Rcpp::List::create(Rcpp::Named("grid") = gridlambda,
+  Rcpp::List out = Rcpp::List::create(
                                       Rcpp::Named("tauminus2") = lambdaOpt,
                                       Rcpp::Named("logML") = valOpt,
                                       Rcpp::Named("thetabar") = thetabar,

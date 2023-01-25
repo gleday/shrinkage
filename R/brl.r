@@ -2,7 +2,7 @@
 #'
 #' @param y numeric response vector of length n.
 #' @param X n by p data matrix.
-#' @param g numeric vector of group memberships.
+#' @param g numeric vector of length p for group memberships.
 #' @param prior character. See Details.
 #' @param a hyperparameter.
 #' @param b hyperparameter.
@@ -12,6 +12,7 @@
 #' @param verbose logical. Whether information on progress should be printed.
 #' @param output character. Either "samples", "summary" or both.
 #' @param BP character. Parametrization of Beta Prime prior. Either "GG" (default) or "IGIG".
+#' @param tau2_0 numeric vector of length p for prior variances (when \code{prior = "fixed"})
 #'
 #' @description 
 #' This function implements inference methods for the Bayesian regression model with local shrinkage priors.
@@ -34,6 +35,8 @@
 #'  \item{}{\eqn{\tau_k^2 \ \sim\  \text{BetaPrime}(a, b)} when \code{prior = "BetaPrime"}}
 #'  \item{}{\eqn{\tau_k^2 \ \sim\  \text{InvGaussian}(a, b)} when \code{prior = "invGaussian"}}
 #'  \item{}{\eqn{\tau_k^2 \ \sim\  \text{Gamma}(a, b)} when \code{prior = "Gamma"}}
+#'  \item{}{\eqn{\tau_k^2 \ =\  \hat{\tau}_{\text{ML}}^2} when \code{prior = "ml"}}
+#'  \item{}{\eqn{\tau^2 \ =\  \tau_{0}^2} when \code{prior = "fixed"}}
 #' } 
 #' 
 #'
@@ -55,7 +58,7 @@
 #' # Generate data
 #' library(mvtnorm)
 #' set.seed(20190719)
-#' n <- 200
+#' n <- 500
 #' p <- 100
 #' V <- toeplitz(c(0, 1, rep(0, p-2)))*0.25 + diag(p) # AR1(0.25)
 #' X <- rmvnorm(n, mean = rep(0,p), sigma = V)
@@ -85,7 +88,7 @@
 #' @export
 brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
                 mcmc = 5000L, burnin = 1000L, thin = 10L, verbose = TRUE,
-                output = "both", BP = "GG"){
+                output = "both", BP = "GG", tau2_0 = rep(1, ncol(X))){
   
   #-----------------------------------------#
   #             PRE-PROCESSING              #
@@ -95,16 +98,18 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
   .checky()
   .checkX()
   .checkg()
-  pr_lab <- c("invGamma", "BetaPrime", "invGaussian", "Gamma", "ml")
+  pr_lab <- c("invGamma", "BetaPrime", "invGaussian", "Gamma", "ml", "fixed")
   .checkPrior()
   .checka()
   .checkb()
   .checkmcmc()
   .checkburnin()
   .checkthin()
+  out_lab <- c("samples", "summary", "both")
   .checkoutput()
   bp_lab <- c("GG", "IGIG")
   .checkBP()
+  .checktau2_0()
   
   #-----------------------------------------#
   #                ALGORITHM                #
@@ -112,46 +117,57 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
   
   tp1 <- proc.time()
   
-  #if(prior %in% c("ml")){
+  if(prior %in% c("ml", "fixed")){
     
-    # Closed-form inference
-    #res0 <- .gridge_fixed(y, X, g)
-    # if(mcmc == 0){
-    #   
-    #   matbeta <- cbind(res0$betabar, sqrt((2*res0$sigma2scale/res0$n)*res0$vartheta))
-    #   colnames(matbeta) <- c("mean", "sd")
-    #   res <- list("betas" = matbeta)
-    #   res$tau2s <- 1/res0$tauminus2
-    #   res$sigma2s <- c("shape" = res0$n/2, "scale" = res0$sigma2scale)
-    #   
-    # }else{
-    #   
-    #   res <- list("betas" = .sampleBetas(mcmc, result=res0))
-    #   res$tau2s <- 1/res0$tauminus2
-    #   res$sigma2s <- 1/rgamma(mcmc, shape=res0$n/2, rate=res0$sigma2scale)
-    #   
-    # }
-  #}else{
-  
-  # prior and bp index/id
-  prior_id <- which(pr_lab == prior)
-  bp_id <- which(bp_lab == BP)
-  
-  # gibbs sampler
-  res <- .brl_gibbs(y, X, g, prior_id, a, b, mcmc, burnin, thin, verbose, bp_id)
-  
-  # convert to vector
-  res$sigma2s <- res$sigma2s[,1]
-  
-  # labels
-  rownames(res$tau2s) <- paste0("tau2_", 1:nrow(res$tau2s))
-  if(is.null(colnames(X))){
-    rownames(res$betas) <- paste0("b", 1:ncol(X))
+    if(verbose){
+      cat("Closed-form inference")
+    }
+    
+    # estimation of penalties using multiridge
+    if(prior == "ml"){
+      res_opt <- .get_brl_opt_tauminus2(y, X, g)
+      tau2_0 <- 1/res_opt$tauminus2
+    }
+    
+    # global shrinkage using scaled X
+    X_tilde <- sweep(X, 2, sqrt(tau2_0), "*")
+    res <- brg(y, X_tilde, prior = "fixed", mcmc = mcmc,
+               verbose = FALSE, output = "samples", tau2_0 = 1)
+    res$logML <- res_opt$logML
+    res$tau2s <- tau2_0
+    names(res$tau2s) <- paste0("tau2_", 1:length(res$tau2s))
+    
+    # scale back posterior summaries or samples
+    if(mcmc == 0){
+
+      # summary for betas (Mean, sd and quantiles)
+      res$betas_summary <- sweep(res$betas_summary, 1, sqrt(tau2_0), "/")
+      res$betas_summary[, "Sd"] <- res$betas_summary[, "Sd"] / sqrt(tau2_0)
+
+    }else{
+      res$betas <- sweep(res$betas, 2, sqrt(tau2_0), "/")
+    }
   }else{
-    rownames(res$betas) <- colnames(X)
-  }
+  
+    # prior and bp index/id
+    prior_id <- which(pr_lab == prior)
+    bp_id <- which(bp_lab == BP)
     
-  #}
+    # gibbs sampler
+    res <- .brl_gibbs(y, X, g, prior_id, a, b, mcmc, burnin, thin, verbose, bp_id)
+    
+    # convert to vector
+    res$sigma2s <- res$sigma2s[,1]
+    
+    # labels
+    rownames(res$tau2s) <- paste0("tau2_", 1:nrow(res$tau2s))
+    if(is.null(colnames(X))){
+      rownames(res$betas) <- paste0("b", 1:ncol(X))
+    }else{
+      rownames(res$betas) <- colnames(X)
+    }
+    
+  }
   
   #-----------------------------------------#
   #            POST-PROCESSING              #
@@ -164,15 +180,18 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
 
     # Summarize samples
     res$betas_summary <- t(apply(res$betas, 1, eightnum))
-    res$tau2s_summary <- t(apply(res$tau2s, 1, eightnum))
+    if(!prior %in% c("ml", "fixed")) res$tau2s_summary <- t(apply(res$tau2s, 1, eightnum))
     res$sigma2s_summary <- eightnum(res$sigma2s)
 
     if(verbose){
       cat("\n")
     }
-
   }
-    
+  
+  # type of model
+  res$model <- paste0("brl_", prior)
+  
+  # time in seconds
   res$time <- proc.time() - tp1
   
   return(res)

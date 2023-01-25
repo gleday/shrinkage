@@ -16,7 +16,8 @@ brl(
   thin = 10L,
   verbose = TRUE,
   output = "both",
-  BP = "GG"
+  BP = "GG",
+  tau2_0 = rep(1, ncol(X))
 )
 }
 \arguments{
@@ -24,7 +25,7 @@ brl(
 
 \item{X}{n by p data matrix.}
 
-\item{g}{numeric vector of group memberships.}
+\item{g}{numeric vector of length p for group memberships.}
 
 \item{prior}{character. See Details.}
 
@@ -43,6 +44,8 @@ brl(
 \item{output}{character. Either "samples", "summary" or both.}
 
 \item{BP}{character. Parametrization of Beta Prime prior. Either "GG" (default) or "IGIG".}
+
+\item{tau2_0}{numeric vector of length p for prior variances (when \code{prior = "fixed"})}
 }
 \value{
 An object of class \code{\link{list}}
@@ -68,6 +71,8 @@ The following choice of priors is available for \eqn{\tau_k^2}:
  \item{}{\eqn{\tau_k^2 \ \sim\  \text{BetaPrime}(a, b)} when \code{prior = "BetaPrime"}}
  \item{}{\eqn{\tau_k^2 \ \sim\  \text{InvGaussian}(a, b)} when \code{prior = "invGaussian"}}
  \item{}{\eqn{\tau_k^2 \ \sim\  \text{Gamma}(a, b)} when \code{prior = "Gamma"}}
+ \item{}{\eqn{\tau_k^2 \ =\  \hat{\tau}_{\text{ML}}^2} when \code{prior = "ml"}}
+ \item{}{\eqn{\tau^2 \ =\  \tau_{0}^2} when \code{prior = "fixed"}}
 }
 }
 \examples{
@@ -75,7 +80,7 @@ The following choice of priors is available for \eqn{\tau_k^2}:
 # Generate data
 library(mvtnorm)
 set.seed(20190719)
-n <- 200
+n <- 500
 p <- 100
 V <- toeplitz(c(0, 1, rep(0, p-2)))*0.25 + diag(p) # AR1(0.25)
 X <- rmvnorm(n, mean = rep(0,p), sigma = V)

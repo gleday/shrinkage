@@ -16,7 +16,7 @@
 #' 
 #' @import Rcpp
 #' @import GIGrvg
-#' @importFrom "stats" "density" "sd" "quantile" "rgamma" "qgamma" "rchisq" "rnorm" "rt" "qt" "dnorm"
+#' @importFrom "stats" "density" "sd" "quantile" "rgamma" "qgamma" "rchisq" "rnorm" "rt" "qt" "dnorm" "optim"
 #' @importFrom "assertthat" "assert_that" "not_empty" "noNA"
 #' @importFrom "purrr" "array_branch" "map2"
 #' 

@@ -15,7 +15,8 @@ brg(
   thin = 10L,
   verbose = TRUE,
   output = "both",
-  BP = "GG"
+  BP = "GG",
+  tau2_0 = 1
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ brg(
 \item{output}{character. Either "samples", "summary" or "both".}
 
 \item{BP}{character. Parametrization of Beta Prime prior. Either "GG" (default) or "IGIG".}
+
+\item{tau2_0}{numeric. Value of global variance when \code{prior = "fixed"}.}
 }
 \value{
 An object of class \code{\link{list}}
@@ -62,6 +65,7 @@ with the following choice of priors for \eqn{\tau^2}:
  \item{}{\eqn{\tau^2 \ \sim\  \text{InvGaussian}(a, b)} when \code{prior = "invGaussian"}}
  \item{}{\eqn{\tau^2 \ \sim\  \text{Gamma}(a, b)} when \code{prior = "Gamma"}}
  \item{}{\eqn{\tau^2 \ =\  \hat{\tau}_{\text{ML}}^2} when \code{prior = "ml"}}
+ \item{}{\eqn{\tau^2 \ =\  \tau_{0}^2} when \code{prior = "fixed"}}
 } 
 
 where \eqn{\text{Gamma}()} represents the Gamma distribution with

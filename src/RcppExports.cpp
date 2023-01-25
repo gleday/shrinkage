@@ -11,6 +11,29 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// fast_svd_list
+Rcpp::List fast_svd_list(arma::mat X);
+RcppExport SEXP _shrinkage_fast_svd_list(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_svd_list(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// brg_eb_tauminus2
+double brg_eb_tauminus2(arma::colvec y, arma::mat X);
+RcppExport SEXP _shrinkage_brg_eb_tauminus2(SEXP ySEXP, SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(brg_eb_tauminus2(y, X));
+    return rcpp_result_gen;
+END_RCPP
+}
 // brg_gibbs
 Rcpp::List brg_gibbs(arma::colvec y, arma::mat X, const int prior, const double a, const double b, const int mcmc, const int burnin, const int thin, bool verbose, const int bp);
 RcppExport SEXP _shrinkage_brg_gibbs(SEXP ySEXP, SEXP XSEXP, SEXP priorSEXP, SEXP aSEXP, SEXP bSEXP, SEXP mcmcSEXP, SEXP burninSEXP, SEXP thinSEXP, SEXP verboseSEXP, SEXP bpSEXP) {
@@ -32,14 +55,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // brg_closedform
-Rcpp::List brg_closedform(arma::colvec y, arma::mat X);
-RcppExport SEXP _shrinkage_brg_closedform(SEXP ySEXP, SEXP XSEXP) {
+Rcpp::List brg_closedform(arma::colvec y, arma::mat X, bool fixed, const double tau2);
+RcppExport SEXP _shrinkage_brg_closedform(SEXP ySEXP, SEXP XSEXP, SEXP fixedSEXP, SEXP tau2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::colvec >::type y(ySEXP);
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
-    rcpp_result_gen = Rcpp::wrap(brg_closedform(y, X));
+    Rcpp::traits::input_parameter< bool >::type fixed(fixedSEXP);
+    Rcpp::traits::input_parameter< const double >::type tau2(tau2SEXP);
+    rcpp_result_gen = Rcpp::wrap(brg_closedform(y, X, fixed, tau2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,8 +91,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_shrinkage_fast_svd_list", (DL_FUNC) &_shrinkage_fast_svd_list, 1},
+    {"_shrinkage_brg_eb_tauminus2", (DL_FUNC) &_shrinkage_brg_eb_tauminus2, 2},
     {"_shrinkage_brg_gibbs", (DL_FUNC) &_shrinkage_brg_gibbs, 10},
-    {"_shrinkage_brg_closedform", (DL_FUNC) &_shrinkage_brg_closedform, 2},
+    {"_shrinkage_brg_closedform", (DL_FUNC) &_shrinkage_brg_closedform, 4},
     {"_shrinkage_brl_gibbs", (DL_FUNC) &_shrinkage_brl_gibbs, 11},
     {NULL, NULL, 0}
 };
