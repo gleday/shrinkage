@@ -11,6 +11,22 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// logML
+double logML(const double tauminus2, const int p, const int n, const double yTy, arma::colvec eigvals, arma::colvec thetahat);
+RcppExport SEXP _shrinkage_logML(SEXP tauminus2SEXP, SEXP pSEXP, SEXP nSEXP, SEXP yTySEXP, SEXP eigvalsSEXP, SEXP thetahatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double >::type tauminus2(tauminus2SEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const double >::type yTy(yTySEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type eigvals(eigvalsSEXP);
+    Rcpp::traits::input_parameter< arma::colvec >::type thetahat(thetahatSEXP);
+    rcpp_result_gen = Rcpp::wrap(logML(tauminus2, p, n, yTy, eigvals, thetahat));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fast_svd_list
 Rcpp::List fast_svd_list(arma::mat X);
 RcppExport SEXP _shrinkage_fast_svd_list(SEXP XSEXP) {
@@ -91,6 +107,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_shrinkage_logML", (DL_FUNC) &_shrinkage_logML, 6},
     {"_shrinkage_fast_svd_list", (DL_FUNC) &_shrinkage_fast_svd_list, 1},
     {"_shrinkage_brg_eb_tauminus2", (DL_FUNC) &_shrinkage_brg_eb_tauminus2, 2},
     {"_shrinkage_brg_gibbs", (DL_FUNC) &_shrinkage_brg_gibbs, 10},

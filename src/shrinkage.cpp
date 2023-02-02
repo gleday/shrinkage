@@ -90,24 +90,14 @@ arma::colvec r_beta_bha(mat phi, colvec Ddiag, colvec alpha){
   return b;
 }
 
-double logML(const double tauminus2, const int p, const int n, const double yTy, colvec eigvals, colvec thetahat){
+// [[Rcpp::export(.brg_logML)]]
+double logML(const double tauminus2, const int p, const int n, const double yTy, arma::colvec eigvals, arma::colvec thetahat){
   double out = -0.5*n*log(datum::pi);
   out += 0.5*p*log(tauminus2);
   out += lgamma(0.5*n);
   colvec egs = zeros(p);
   egs.subvec(0, eigvals.n_elem-1) += eigvals;
   out -= 0.5*sum(log(egs + tauminus2));
-  out -= 0.5*n*log(0.5*yTy - 0.5*sum((square(thetahat)%square(eigvals))/(eigvals + tauminus2)));
-  return(out);
-}
-
-double logML(arma::colvec tauminus2, const int p, const int n, const double yTy, colvec eigvals, colvec thetahat){
-  double out = -0.5*n*log(datum::pi);
-  out += 0.5*p*sum(log(tauminus2));
-  out += lgamma(0.5*n);
-  colvec eigs = zeros(p);
-  eigs.subvec(0, eigvals.n_elem-1) += eigvals;
-  out -= 0.5*sum(log(eigs + tauminus2));
   out -= 0.5*n*log(0.5*yTy - 0.5*sum((square(thetahat)%square(eigvals))/(eigvals + tauminus2)));
   return(out);
 }
@@ -213,6 +203,16 @@ double brg_eb_tauminus2(arma::colvec y, arma::mat X){
   return lambdaOpt;
 }
 
+// // [[Rcpp::export(.get_brg_opt_tauminus2)]]
+// arma::mat samples_normal_likelihood(arma::colvec y, arma::mat mean_samples, arma::colvec sd_samples){
+//   
+//   // log-likelihood samples
+//   arma::mat loglik_samples(size(mean_samples), fill::zeros);
+//   loglik_samples.each_col() += v; 
+//   log_normpdf(y, mean_samples[, i], sd_samples[i])
+//   
+//   return lambdaOpt;
+// }
 
 // // [[Rcpp::export(.get_brg_opt_tauminus2)]]
 // Rcpp::List get_brg_opt_tauminus2(arma::colvec y, arma::mat X){
@@ -488,6 +488,7 @@ Rcpp::List brg_closedform(arma::colvec y, arma::mat X, bool fixed = false,
       Rcpp::Named("bar") = thetabar,
       Rcpp::Named("var") = thetavar
     ),
+    Rcpp::Named("logML") = logML(lambdaOpt, X.n_cols, X.n_rows, yTy, d2, thetahat),
     Rcpp::Named("sigma2scale") = 0.5*sigma2scale,
     Rcpp::Named("n") = X.n_rows
     );

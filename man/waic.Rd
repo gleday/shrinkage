@@ -7,7 +7,7 @@
 waic(object, y, X)
 }
 \arguments{
-\item{object}{list object returned by brg(), brl(), brgl()...}
+\item{object}{list object returned by brg() or brl()}
 
 \item{y}{response vector.}
 

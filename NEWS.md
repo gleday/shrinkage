@@ -11,4 +11,6 @@ This file lists changes in the R package for each release.
 * user-defined prior variance values can be provided in brg() and brl()
 * prior = "ml" added to brl()
 
+## shrinkage 1.3.1
 
+* functions likelihood() and log_likelihood() have replaced log_lik()

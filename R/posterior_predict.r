@@ -1,6 +1,6 @@
 #' posterior predictive distribution
 #'
-#' @param object list object returned by brg(), brl(), brgl()...
+#' @param object list object returned by brg() or brl()
 #' @param X data matrix (new or current observations).
 #' @param output character. Either "samples", "summary" or "both".
 #'
@@ -31,6 +31,42 @@ posterior_predict <- function(object, X, output = "both"){
   #-----------------------------------------#
   #    POSTERIOR SAMPLES AND SUMMARIES      #
   #-----------------------------------------#
+  
+  out <- list()
+  if( ("svd" %in% names(object)) & (!"betas" %in% names(object)) ){
+    
+    # summary
+    t_mean <- tcrossprod(object$betas_summary[, "Mean"], X)[1,]
+    XV <- tcrossprod(X, t(object$svd$v))
+    t_var <- tcrossprod(XV^2, t(object$theta$var) )[,1] + ((2*object$sigma2scale)/object$n)
+    out$summary <- t(mapply(.sixnum_t, mean = t_mean, scale = t_var, df = object$n))
+    
+    # samples
+    #if(output != "summary"){
+    #  out$samples <- mapply(
+    #    .generate_t, mean = t_mean, scale = t_var, df = object$n, ns = 5000)
+    #}
+  }else{
+    
+    # obtain samples from the linear predictor
+    linpreds <- posterior_linpred(object = object, X = X, output = "samples")$samples
+    
+    # number of mcmc samples
+    mcmc <- ncol(object$betas)
+    
+    # sample from posterior predictive distribution
+    out$samples <- matrix(rnorm(nrow(X)*mcmc), nrow(X), mcmc)
+    out$samples <- sweep(out$samples, 2, sqrt(object$sigma2s), "*")
+    out$samples <- out$samples + linpreds
+    
+    # summary
+    if(output != "samples"){
+      out$summary <- t(apply(out$samples, 1, eightnum))
+      if(output == "summary"){
+        out <- out["summary"]
+      }
+    }
+  }
   
   # out <- list()
   # if(any(c("betas", "thetas") %in% names(object))){
@@ -70,9 +106,9 @@ posterior_predict <- function(object, X, output = "both"){
   # }
   
   # keep summary
-  if(length(out)!=0 & output == "summary"){
-    out <- out["summary"]
-  }
+  #if(length(out)!=0 & output == "summary"){
+  #  out <- out["summary"]
+  #}
   
   out
 }

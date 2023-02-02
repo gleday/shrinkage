@@ -113,7 +113,7 @@ where $D$ is a $n\times r$ diagonal matrix with diagonal elements $d_r$,
 $r=1, \ldots, q=\mathrm{min}(n,p)$, and $U$ and $V$ are $n\times n$ and
 $p\times r$ orthogonal matrices. This way we can write:
 \begin{eqnarray*}
-\beta \mid y &\sim& \mathrm{T}_p \left( V \bar{\theta} ,  \frac{y^T y - \bar{\theta}^T \bar{\Theta}^{-1} \bar{\theta}}{n} V^T\bar{\Theta}V, n\right),\\
+\beta \mid y &\sim& \mathrm{T}_p \left( V \bar{\theta} ,  \frac{y^T y - \bar{\theta}^T \bar{\Theta}^{-1} \bar{\theta}}{n} V\bar{\Theta}V^T, n\right),\\
 \sigma^2 \mid y &\sim& \mathrm{InvGamma} \left( \frac{n}{2} , \frac{1}{2} \left[ y^T y - \bar{\theta}^T \bar{\Sigma}^{-1} \bar{\theta} \right] \right)\quad \mathrm{and} \quad  \\
 p(y) &=& \pi^{-\frac{n}{2}} \left( \tau^2\right)^{-\frac{p}{2}} \mid \bar{\Theta} \mid^{\frac{1}{2}} \Gamma\left( \frac{n}{2} \right) \left( \frac{1}{2} y^T y - \frac{1}{2} \bar{\theta}^T \bar{\Theta}^{-1} \bar{\theta} \right)^{-\frac{n}{2}},
 \end{eqnarray*}

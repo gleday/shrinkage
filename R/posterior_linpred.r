@@ -1,6 +1,6 @@
 #' posterior distribution of the linear predictor
 #'
-#' @param object list object returned by brg(), brl(), brgl()...
+#' @param object list object returned by brg() or brl()
 #' @param X data matrix (new or current observations).
 #' @param output character. Either "samples", "summary" or "both".
 #'
@@ -32,19 +32,19 @@ posterior_linpred <- function(object, X, output = "both"){
   #-----------------------------------------#
   
   out <- list()
-  if("svd" %in% names(object)){
+  if( ("svd" %in% names(object)) & (!"betas" %in% names(object)) ){
     
     # summary
-    t_mean <- rowSums(sweep(X, 2 , object$betas_summary[, "Mean"], "*"))
+    t_mean <- tcrossprod(object$betas_summary[, "Mean"], X)[1,]
     XV <- tcrossprod(X, t(object$svd$v))
-    t_var <- rowSums(sweep(XV, 2 , sqrt(object$theta$var), "*")^2)
+    t_var <- tcrossprod(XV^2, t(object$theta$var) )[,1]
     out$summary <- t(mapply(.sixnum_t, mean = t_mean, scale = t_var, df = object$n))
     
     # samples
-    if(output != "summary"){
-      out$samples <- mapply(
-        .generate_t, mean = t_mean, scale = t_var, df = object$n, ns = 5000)
-    }
+    #if(output != "summary"){
+    #  out$samples <- mapply(
+    #    .generate_t, mean = t_mean, scale = t_var, df = object$n, ns = 5000)
+    #}
   }else{
     
     # samples

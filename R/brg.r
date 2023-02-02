@@ -245,7 +245,7 @@ brg <- function(y, X, prior = "BetaPrime", a = 0.5, b = 0.5, mcmc = 5000L,
   }
   
   # components to output
-  ind <- !(names(res) %in% c("beta", "sigma2scale"))
+  ind <- !(names(res) %in% c("beta"))
 
   # type of model
   res$model <- c("brg_", prior)

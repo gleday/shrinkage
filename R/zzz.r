@@ -239,10 +239,10 @@
   yTy <- sum(y^2)
   #print("Initialization")
   # initialization - EB value of global shrinkage model
-  par0 <- .get_brg_opt_tauminus2(y, X)
-  par0 <- rep(par0, K)
-  #X_list <- .X_blocks(X, grp)
-  #par0 <- purrr::map_dbl(X_list, .get_brg_opt_tauminus2, y = y)
+  #par0 <- .get_brg_opt_tauminus2(y, X)
+  #par0 <- rep(par0, K)
+  X_list <- .X_blocks(X, grp)
+  par0 <- purrr::map_dbl(X_list, .get_brg_opt_tauminus2, y = y)
   #print(par0)
   #par0 <- rep(par0, each = 50)
   

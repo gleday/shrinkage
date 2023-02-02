@@ -1,6 +1,6 @@
 #' Watanabe-Akaike information criterion
 #'
-#' @param object list object returned by brg(), brl(), brgl()...
+#' @param object list object returned by brg() or brl()
 #' @param y response vector.
 #' @param X data matrix.
 #'
@@ -43,22 +43,28 @@ waic <- function(object, y, X){
   #                  WAIC                   #
   #-----------------------------------------#
   
-  # get log-likelihood samples
-  ll <- log_lik(object, y = y, X = X, output = "samples")$samples
-  
-  # log-pointwise predictive density
-  lppd <- sum(log(rowMeans2(exp(ll))))
-  
-  # effect number of parameters (pWAIC2 in Gelman et al., 2014)
-  p_waic <- sum(rowVars(ll))
-  # effect number of parameters (pWAIC1 in Gelman et al., 2014)
-  #p_waic <- 2 * sum(log(rowMeans2(exp(ll))) - rowMeans2(ll))
-  
-  # expected log-pointwise predictive density
-  elppd_waic <- lppd - p_waic
-  
-  # criterion on deviance scale
-  waic <- -2*elppd_waic
-  
+  out <- list()
+  if( ("svd" %in% names(object)) & (!"betas" %in% names(object)) ){
+    
+  }else{
+    
+    # get likelihood samples
+    ll <- log_likelihood(object, y = y, X = X, output = "samples")$samples
+    
+    # log-pointwise predictive density
+    lppd <- sum(log(rowMeans2(exp(ll))))
+    
+    # effect number of parameters (pWAIC2 in Gelman et al., 2014)
+    p_waic <- sum(rowVars(ll))
+    # effect number of parameters (pWAIC1 in Gelman et al., 2014)
+    #p_waic <- 2 * sum(log(rowMeans2(exp(ll))) - rowMeans2(ll))
+    
+    # expected log-pointwise predictive density
+    elppd_waic <- lppd - p_waic
+    
+    # criterion on deviance scale
+    waic <- -2*elppd_waic
+  }
+
   list("lppd" = lppd, "p_waic" = p_waic, "elppd" = elppd_waic, "waic" = waic)
 }

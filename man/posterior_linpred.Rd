@@ -7,7 +7,7 @@
 posterior_linpred(object, X, output = "both")
 }
 \arguments{
-\item{object}{list object returned by brg(), brl(), brgl()...}
+\item{object}{list object returned by brg() or brl()}
 
 \item{X}{data matrix (new or current observations).}
 
