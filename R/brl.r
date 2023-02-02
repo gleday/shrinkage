@@ -130,7 +130,7 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
     }
     
     # global shrinkage using scaled X
-    X_tilde <- sweep(X, 2, sqrt(tau2_0), "*")
+    X_tilde <- sweep(X, 2, sqrt(tau2_0[g]), "*")
     res <- brg(y, X_tilde, prior = "fixed", mcmc = mcmc,
                verbose = FALSE, output = "samples", tau2_0 = 1)
     res$logML <- res_opt$logML
@@ -141,11 +141,11 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
     if(mcmc == 0){
 
       # summary for betas (Mean, sd and quantiles)
-      res$betas_summary <- sweep(res$betas_summary, 1, sqrt(tau2_0), "/")
-      res$betas_summary[, "Sd"] <- res$betas_summary[, "Sd"] / sqrt(tau2_0)
+      res$betas_summary <- sweep(res$betas_summary, 1, sqrt(tau2_0[g]), "/")
+      res$betas_summary[, "Sd"] <- res$betas_summary[, "Sd"] / sqrt(tau2_0[g])
 
     }else{
-      res$betas <- sweep(res$betas, 2, sqrt(tau2_0), "/")
+      res$betas <- sweep(res$betas, 2, sqrt(tau2_0[g]), "/")
     }
   }else{
   
