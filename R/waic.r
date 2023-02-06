@@ -60,7 +60,7 @@ waic <- function(object, y, X){
     
   }else{
     
-    # get likelihood samples
+    # get log-likelihood samples
     ll <- likelihood(object, y = y, X = X, log = TRUE, output = "samples")$samples
     
     # log-pointwise predictive density

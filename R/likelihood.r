@@ -73,7 +73,7 @@ likelihood <- function(object, y, X, log = FALSE, output = "both"){
     out$samples <- sweep(out$samples, 2, log(sqrt(object$sigma2s)), "-")
     
     # samples from the likelihood
-    if(log){
+    if(!log){
       out$samples <- exp(out$samples)
     }
     
