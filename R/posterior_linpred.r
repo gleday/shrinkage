@@ -31,7 +31,7 @@ posterior_linpred <- function(object, X, output = "both"){
   #    POSTERIOR SAMPLES AND SUMMARIES      #
   #-----------------------------------------#
   
-  out <- list()
+  out <- list("summary" = NULL, "samples" = NULL)
   if( ("svd" %in% names(object)) & (!"betas" %in% names(object)) ){
     
     # summary
@@ -43,7 +43,7 @@ posterior_linpred <- function(object, X, output = "both"){
     # samples
     #if(output != "summary"){
     #  out$samples <- mapply(
-    #    .generate_t, mean = t_mean, scale = t_var, df = object$n, ns = 5000)
+    #    .r_st, mean = t_mean, scale = t_var, df = object$n, ns = 5000)
     #}
   }else{
     
@@ -54,7 +54,7 @@ posterior_linpred <- function(object, X, output = "both"){
     if(output != "samples"){
       out$summary <- t(apply(out$samples, 1, eightnum))
       if(output == "summary"){
-        out <- out["summary"]
+        out$samples <- NULL
       }
     }
   }

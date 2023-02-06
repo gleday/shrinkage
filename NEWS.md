@@ -14,3 +14,8 @@ This file lists changes in the R package for each release.
 ## shrinkage 1.3.1
 
 * functions likelihood() and log_likelihood() have replaced log_lik()
+
+## shrinkage 1.3.2
+
+* functions likelihood() and log_likelihood() have been combined
+* error corrected in brl()

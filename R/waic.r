@@ -46,10 +46,22 @@ waic <- function(object, y, X){
   out <- list()
   if( ("svd" %in% names(object)) & (!"betas" %in% names(object)) ){
     
+    # get likelihood summary
+    like <- likelihood(object, y = y, X = X, log = FALSE, output = "summary")$summary
+    
+    # log-pointwise predictive density
+    lppd <- sum(log(like[, "Mean"]))
+    # lppd <- sum(.d_st(y, mean = t_mean, scale = t_var, df = res0$n, log = TRUE))
+    
+    # effect number of parameters (pWAIC2 in Gelman et al., 2014)
+    p_waic <- sum(rowVars(ll))
+    #p_waic <- 2 * sum(.d_st(y, mean = t_mean, scale = t_var, df = res0$n, log = TRUE) + .entropy_st(t_var, df = res0$n))
+    #p_waic <- 2 * sum(.d_st(y, mean = t_mean, scale = t_var, df = res0$n, log = TRUE) - (-0.5 + 0.5*(digamma(0.5*res0$n) - log(res0$sigma2scale)) - 0.5*log(2*pi)))
+    
   }else{
     
     # get likelihood samples
-    ll <- log_likelihood(object, y = y, X = X, output = "samples")$samples
+    ll <- likelihood(object, y = y, X = X, log = TRUE, output = "samples")$samples
     
     # log-pointwise predictive density
     lppd <- sum(log(rowMeans2(exp(ll))))

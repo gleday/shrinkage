@@ -143,7 +143,7 @@
 }
 
 .sample_thetas <- function(nsamp, result){
-  mapply(.generate_t,
+  mapply(.r_st,
          mean = result$theta$bar,
          scale = result$theta$var,
          df = result$n,
@@ -174,11 +174,32 @@
   out
 }
 
-.generate_t <- function(mean, scale, df, ns){
-  m <- mean
-  s <- sqrt(scale)
-  m + s * rt(ns, df = df)
+# sample from scaled t-distribution
+.r_st <- function(mean, scale, df, ns){
+  mean + sqrt(scale) * rt(ns, df = df)
 }
+
+# density of scaled t-distribution
+.d_st <- function(x, mean, scale, df, log = FALSE){
+  dens <- dt((x-mean)/sqrt(scale), df = df, log = log)
+  if(log){
+    dens <- dens - log(sqrt(scale))
+  }else{
+    dens <- dens/sqrt(scale)
+  }
+  dens
+}
+
+# entropy of scaled t-distribution (= entropy of t + log(sqrt(scale)))
+.entropy_st <- function(scale, df){
+  0.5*(df + 1)*(digamma(0.5*(df + 1)) - digamma(0.5*df)) + lbeta(0.5*df, 0.5) + 0.5*log(df) - log(sqrt(scale))
+}
+
+# expectated log-density of scaled t-distribution
+.explog_st <- function(scale, df){
+  -.entropy_st(scale, df = df)
+}
+
 
 .get_brl_logML_p <- function(log_tauminus2, yTy, XTy, XTX, groups, n, p){
   

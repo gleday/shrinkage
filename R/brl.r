@@ -145,7 +145,7 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
       res$betas_summary[, "Sd"] <- res$betas_summary[, "Sd"] / sqrt(tau2_0[g])
 
     }else{
-      res$betas <- sweep(res$betas, 2, sqrt(tau2_0[g]), "/")
+      res$betas <- sweep(res$betas, 1, sqrt(tau2_0[g]), "/")
     }
   }else{
   
