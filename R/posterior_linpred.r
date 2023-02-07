@@ -36,6 +36,9 @@ posterior_linpred <- function(object, X, output = "both"){
     
     # summary
     t_mean <- tcrossprod(object$betas_summary[, "Mean"], X)[1,]
+    if("g" %in% names(object)){
+      object$svd$v <- sweep(object$svd$v, 1, sqrt(object$tau2s[object$g]), "*")
+    }
     XV <- tcrossprod(X, t(object$svd$v))
     t_var <- tcrossprod(XV^2, t(object$theta$var) )[,1]
     out$summary <- t(mapply(.sixnum_t, mean = t_mean, scale = t_var, df = object$n))

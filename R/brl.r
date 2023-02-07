@@ -138,6 +138,7 @@ brl <- function(y, X, g = 1:ncol(X), prior = "BetaPrime", a = 0.5, b = 0.5,
     }
     res$tau2s <- tau2_0
     names(res$tau2s) <- paste0("tau2_", 1:length(res$tau2s))
+    res$g <- g
     
     # scale back posterior summaries or samples
     if(mcmc == 0){
