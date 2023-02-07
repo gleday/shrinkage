@@ -211,7 +211,7 @@
   chol_mat_pp <- chol(mat_pp)
   logdet_mat_pp <- 2*sum(log(diag(chol_mat_pp)))
   imat_pp <- chol2inv(chol_mat_pp)
-  q_form <- sum(crossprod(XTy, imat_pp)[1,]*XTy[, 1])
+  q_form <- sum(crossprod(XTy, imat_pp)[1,]*XTy)
   
   # log-ML
   out <- -(n/2)*log(pi)

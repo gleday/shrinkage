@@ -468,7 +468,7 @@ Rcpp::List brg_closedform(arma::colvec y, arma::mat X, bool fixed = false,
   mat vv = v;
   v.each_row() %= sqrt(thetavar.t());
   colvec betavar = arma::sum(square(v), 1);
-  const double sigma2scale = yTy - sum((square(thetahat)%square(d2))/(d2 + lambdaOpt));
+  const double sigma2scale = yTy - sum((square(thetahat)%square(d2))/(d2 + lambdaOpt));//sum(square(thetabar)%(d2 + lambdaOpt));//
   betavar *= sigma2scale / X.n_rows;
   thetavar *= sigma2scale / X.n_rows;
   
